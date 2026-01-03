@@ -260,7 +260,6 @@ public partial class MainWindow : Window
         BtnRotateLeft.IsEnabled = enable;
         BtnRotateRight.IsEnabled = enable;
         BtnCrop.IsEnabled = enable;
-        BtnCropSetSize.IsEnabled = enable;
         BtnCropMoveUp.IsEnabled = enable;
         BtnCropMoveDown.IsEnabled = enable;
         BtnCropMoveLeft.IsEnabled = enable;

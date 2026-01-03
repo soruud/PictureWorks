@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.0.8" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.0.9" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -96,14 +96,13 @@
                 
                 <TextBlock Text="Crop:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
                 <TextBlock Text="Width:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
-                <TextBox x:Name="TxtCropWidth" Width="60" Margin="2,0" VerticalAlignment="Center" Text="425"/>
+                <TextBox x:Name="TxtCropWidth" Width="60" Margin="2,0" VerticalAlignment="Center" Text="425" KeyDown="TxtCropWidth_KeyDown"/>
                 <TextBlock Text="Height:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
-                <TextBox x:Name="TxtCropHeight" Width="60" Margin="2,0" VerticalAlignment="Center" Text="300"/>
-                <Button x:Name="BtnCropSetSize" Content="Set Size" Style="{StaticResource ModernButton}" Click="BtnCropSetSize_Click" IsEnabled="False" ToolTip="Set crop selection size"/>
+                <TextBox x:Name="TxtCropHeight" Width="60" Margin="2,0" VerticalAlignment="Center" Text="300" KeyDown="TxtCropHeight_KeyDown"/>
                 <Button x:Name="BtnCropMoveUp" Content="↑" Style="{StaticResource ModernButton}" Click="BtnCropMoveUp_Click" IsEnabled="False" Width="30" ToolTip="Move crop up"/>
                 <Button x:Name="BtnCropMoveDown" Content="↓" Style="{StaticResource ModernButton}" Click="BtnCropMoveDown_Click" IsEnabled="False" Width="30" ToolTip="Move crop down"/>
                 <Button x:Name="BtnCropMoveLeft" Content="←" Style="{StaticResource ModernButton}" Click="BtnCropMoveLeft_Click" IsEnabled="False" Width="30" ToolTip="Move crop left"/>
-                <Button x:Name="BtnCropMoveRight" Content="→" Style="{StaticResource ModernButton}" Click="BtnCropMoveRight_Click" IsEnabled="False" Width="30" ToolTip="Move crop right" FontFamily="Segoe UI Symbol"/>
+                <Button x:Name="BtnCropMoveRight" Content="→" Style="{StaticResource ModernButton}" Click="BtnCropMoveRight_Click" IsEnabled="False" Width="30" ToolTip="Move crop right"/>
                 <Button x:Name="BtnCropCenter" Content="⌂" Style="{StaticResource ModernButton}" Click="BtnCropCenter_Click" IsEnabled="False" Width="30" ToolTip="Center crop"/>
                 <Button x:Name="BtnCrop" Content="Apply Crop" Style="{StaticResource ModernButton}" Click="BtnCrop_Click" IsEnabled="False"/>
                 
