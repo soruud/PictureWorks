@@ -20,28 +20,29 @@ public partial class App : Application
         this.DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         
-        // Create main window first
-        MainWindow mainWindow = new();
-        this.MainWindow = mainWindow;
-        mainWindow.Show();
+        // Show splash screen
+        _splashScreen = new SplashScreen();
+        _splashScreen.Show();
         
-        // Show splash screen 0.2 seconds after main window is loaded
+        // Create main window but don't show it yet
+        MainWindow mainWindow = new();
+        
+        // Close splash screen when main window is loaded
         mainWindow.Loaded += (s, args) =>
         {
-            // Use DispatcherTimer to delay splash screen appearance
-            DispatcherTimer delayTimer = new()
+            // Wait a bit more to ensure splash is visible
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                Interval = TimeSpan.FromMilliseconds(200) // 0.2 seconds
-            };
-            delayTimer.Tick += (sender, e) =>
-            {
-                delayTimer.Stop();
-                _splashScreen = new SplashScreen();
-                _splashScreen.Owner = mainWindow; // Set owner so it appears on top
-                _splashScreen.Show();
-            };
-            delayTimer.Start();
+                if (_splashScreen != null)
+                {
+                    _splashScreen.Close();
+                    _splashScreen = null;
+                }
+            }), DispatcherPriority.Loaded);
         };
+        
+        this.MainWindow = mainWindow;
+        mainWindow.Show();
     }
     
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
