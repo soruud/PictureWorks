@@ -57,11 +57,14 @@ public partial class MainWindow : Window
         {
             SetupDragAndDrop();
             
-            // Attach event handlers after InitializeComponent
+            // Attach event handlers after InitializeComponent (to avoid null reference during XAML parsing)
             RbResizePercent.Checked += RbResizeMode_Changed;
             RbResizePercent.Unchecked += RbResizeMode_Changed;
             RbResizePixel.Checked += RbResizeMode_Changed;
             RbResizePixel.Unchecked += RbResizeMode_Changed;
+            
+            // Attach TextChanged handler after InitializeComponent
+            TxtResizeWidth.TextChanged += TxtResizeWidth_TextChanged;
             
             // Initialize resize UI visibility after all controls are loaded
             this.Loaded += (s, e) => 
@@ -297,7 +300,10 @@ public partial class MainWindow : Window
     
     private void TxtResizeWidth_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (CbMaintainAspect.IsChecked == true && _currentImage != null)
+        // Only update if controls are initialized and image is loaded
+        if (CbMaintainAspect == null || TxtResizeHeight == null || _currentImage == null) return;
+        
+        if (CbMaintainAspect.IsChecked == true)
         {
             if (int.TryParse(TxtResizeWidth.Text, out int width) && width > 0)
             {
