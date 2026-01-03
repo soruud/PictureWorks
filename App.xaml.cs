@@ -24,25 +24,14 @@ public partial class App : Application
         _splashScreen = new SplashScreen();
         _splashScreen.Show();
         
-        // Create main window but don't show it yet
-        MainWindow mainWindow = new();
-        
-        // Close splash screen when main window is loaded
-        mainWindow.Loaded += (s, args) =>
+        // Wait for splash screen to close before showing main window
+        _splashScreen.Closed += (s, args) =>
         {
-            // Wait a bit more to ensure splash is visible
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (_splashScreen != null)
-                {
-                    _splashScreen.Close();
-                    _splashScreen = null;
-                }
-            }), DispatcherPriority.Loaded);
+            // Create and show main window after splash screen closes
+            MainWindow mainWindow = new();
+            this.MainWindow = mainWindow;
+            mainWindow.Show();
         };
-        
-        this.MainWindow = mainWindow;
-        mainWindow.Show();
     }
     
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

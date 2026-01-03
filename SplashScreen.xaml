@@ -3,23 +3,17 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="PictureWorks" 
         WindowStyle="None"
-        AllowsTransparency="True"
-        Background="Transparent"
+        AllowsTransparency="False"
+        Background="White"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
         Topmost="True"
-        ResizeMode="NoResize"
-        Width="600" Height="400">
+        ResizeMode="NoResize">
     <Grid>
-        <Border Background="White" CornerRadius="10" BorderThickness="2" BorderBrush="#4A90E2">
-            <Grid>
-                <Image Source="pack://application:,,,/PW_LOGO.png" 
-                       Stretch="Uniform"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       Margin="20"/>
-            </Grid>
-        </Border>
+        <Image Source="pack://application:,,,/PW_LOGO.png" 
+               Stretch="None"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"/>
     </Grid>
 </Window>
 

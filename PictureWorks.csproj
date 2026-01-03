@@ -6,16 +6,17 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
-    <ApplicationIcon />
+    <Version>1.2.1</Version>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>
+    <FileVersion>1.2.1.0</FileVersion>
+    <ApplicationIcon>PW_Icon.ico</ApplicationIcon>
   </PropertyGroup>
   
   <ItemGroup>
     <Resource Include="PayPal_Logo_Alternative_1.png" />
     <Resource Include="PW_LOGO.png" />
     <Resource Include="PW_Icon.png" />
+    <Resource Include="PW_Icon.ico" />
   </ItemGroup>
   
   <ItemGroup>
