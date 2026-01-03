@@ -1053,22 +1053,11 @@ UNDO/REDO:
     
     private void BtnAbout_Click(object sender, RoutedEventArgs e)
     {
-        string aboutText = @"PictureWorks v1.1.3
-
-A Windows desktop application for image editing.
-
-Created by:
-Stig Ove K. Ruud
-
-Contact:
-Email: soruud@gmail.com
-
-Support this project:
-PayPal: soruud@gmail.com
-
-Thank you for using PictureWorks!";
-
-        MessageBox.Show(aboutText, "About PictureWorks", MessageBoxButton.OK, MessageBoxImage.Information);
+        AboutWindow aboutWindow = new()
+        {
+            Owner = this
+        };
+        aboutWindow.ShowDialog();
     }
     
     // ============================================

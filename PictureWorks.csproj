@@ -11,6 +11,16 @@
     <FileVersion>1.1.4.0</FileVersion>
     <ApplicationIcon />
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Resource Include="PayPal_Logo_Alternative_1.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Page Update="AboutWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
 
   <!-- Auto-copy executable to Ready Builds folder with version number -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
