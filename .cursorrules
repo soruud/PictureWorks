@@ -42,11 +42,13 @@ When creating new changes:
 ## Code Modification Rules
 
 **IMPORTANT:** 
-- **Never modify working code unless strictly necessary**
-- Only change code that is broken, needs fixing, or when explicitly requested
-- If code is working correctly, leave it as is
-- When adding new features, add new code rather than modifying existing working code when possible
-- Refactoring should only be done when explicitly requested or when necessary for bug fixes
+- **Evaluate the best approach** - Consider whether to modify existing code or add new code
+- **Preserve existing functionality** - Always maintain working features when making changes
+- **Avoid unnecessary duplication** - If modifying existing code improves maintainability and reduces duplication, do so
+- **Refactor when beneficial** - Refactoring is allowed when it improves code quality, maintainability, performance, or reduces duplication
+- **Test thoroughly** - Always test changes to ensure existing functionality is preserved
+- **Document significant changes** - Explain why code was modified if it's not immediately obvious
+- **Balance** - Choose the approach that best balances code quality, maintainability, and stability
 
 ## Language Rules
 
