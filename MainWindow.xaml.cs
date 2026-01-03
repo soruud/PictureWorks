@@ -44,7 +44,21 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         SetupDragAndDrop();
-        UpdateTheme();
+        
+        // Initialize resize UI visibility
+        if (RbResizePercent.IsChecked == true)
+        {
+            PanelPercentSize.Visibility = Visibility.Visible;
+            PanelPixelSize.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            PanelPercentSize.Visibility = Visibility.Collapsed;
+            PanelPixelSize.Visibility = Visibility.Visible;
+        }
+        
+        // Update theme after window is loaded
+        this.Loaded += (s, e) => UpdateTheme();
     }
     
     // ============================================
@@ -614,25 +628,38 @@ public partial class MainWindow : Window
     
     private void UpdateTheme()
     {
-        if (_isDarkMode)
+        try
         {
-            Resources["WindowBackground"] = Resources["WindowBackgroundDark"];
-            Resources["PanelBackground"] = Resources["PanelBackgroundDark"];
-            Resources["ButtonBackground"] = Resources["ButtonBackgroundDark"];
-            Resources["ButtonHover"] = Resources["ButtonHoverDark"];
-            Resources["TextColor"] = Resources["TextColorDark"];
-            Resources["BorderColor"] = Resources["BorderColorDark"];
-            BtnDarkMode.Content = "Light Mode";
+            if (_isDarkMode)
+            {
+                if (Resources.Contains("WindowBackgroundDark"))
+                {
+                    Resources["WindowBackground"] = Resources["WindowBackgroundDark"];
+                    Resources["PanelBackground"] = Resources["PanelBackgroundDark"];
+                    Resources["ButtonBackground"] = Resources["ButtonBackgroundDark"];
+                    Resources["ButtonHover"] = Resources["ButtonHoverDark"];
+                    Resources["TextColor"] = Resources["TextColorDark"];
+                    Resources["BorderColor"] = Resources["BorderColorDark"];
+                }
+                if (BtnDarkMode != null)
+                    BtnDarkMode.Content = "Light Mode";
+            }
+            else
+            {
+                Resources["WindowBackground"] = new SolidColorBrush(Color.FromRgb(240, 244, 248));
+                Resources["PanelBackground"] = new SolidColorBrush(Color.FromRgb(232, 237, 242));
+                Resources["ButtonBackground"] = new SolidColorBrush(Color.FromRgb(74, 144, 226));
+                Resources["ButtonHover"] = new SolidColorBrush(Color.FromRgb(53, 122, 189));
+                Resources["TextColor"] = new SolidColorBrush(Color.FromRgb(44, 62, 80));
+                Resources["BorderColor"] = new SolidColorBrush(Color.FromRgb(189, 195, 199));
+                if (BtnDarkMode != null)
+                    BtnDarkMode.Content = "Dark Mode";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Resources["WindowBackground"] = new SolidColorBrush(Color.FromRgb(240, 244, 248));
-            Resources["PanelBackground"] = new SolidColorBrush(Color.FromRgb(232, 237, 242));
-            Resources["ButtonBackground"] = new SolidColorBrush(Color.FromRgb(74, 144, 226));
-            Resources["ButtonHover"] = new SolidColorBrush(Color.FromRgb(53, 122, 189));
-            Resources["TextColor"] = new SolidColorBrush(Color.FromRgb(44, 62, 80));
-            Resources["BorderColor"] = new SolidColorBrush(Color.FromRgb(189, 195, 199));
-            BtnDarkMode.Content = "Dark Mode";
+            // Silently fail - theme will use defaults
+            System.Diagnostics.Debug.WriteLine($"Theme update error: {ex.Message}");
         }
     }
     
