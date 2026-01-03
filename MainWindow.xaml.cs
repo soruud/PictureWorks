@@ -282,7 +282,7 @@ public partial class MainWindow : Window
     // ============================================
     // Zoom Functions
     // ============================================
-    private void ScrollViewerImage_MouseWheel(object sender, MouseWheelEventArgs e)
+    private void CanvasEdited_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         if (_currentImage == null) return;
         
@@ -301,6 +301,7 @@ public partial class MainWindow : Window
         ApplyZoom();
         UpdateCanvasSize();
         
+        // Prevent ScrollViewer from scrolling
         e.Handled = true;
     }
     
