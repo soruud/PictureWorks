@@ -13,17 +13,6 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <Resource Include="PW_LOGO.png" />
-    <Resource Include="PW_Icon.png" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Page Update="SplashScreen.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  
-  <ItemGroup>
     <Resource Include="PayPal_Logo_Alternative_1.png" />
     <Resource Include="PW_LOGO.png" />
     <Resource Include="PW_Icon.png" />
