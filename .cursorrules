@@ -23,5 +23,13 @@ When creating new changes:
 - Use descriptive commit messages
 - Test changes before committing
 
+## Language Rules
+
+**IMPORTANT:** All text must be in English:
+- All text in README.md must be in English
+- All text in the program/application must be in English
+- All user-facing text, labels, messages, and documentation must be in English
+- Code comments should be in English
+
 ## PictureWorks Specific Rules
 <!-- Add project-specific rules here as the project develops -->
