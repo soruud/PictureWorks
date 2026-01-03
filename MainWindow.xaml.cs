@@ -42,23 +42,51 @@ public partial class MainWindow : Window
     // ============================================
     public MainWindow()
     {
-        InitializeComponent();
-        SetupDragAndDrop();
-        
-        // Initialize resize UI visibility
-        if (RbResizePercent.IsChecked == true)
+        try
         {
-            PanelPercentSize.Visibility = Visibility.Visible;
-            PanelPixelSize.Visibility = Visibility.Collapsed;
+            InitializeComponent();
         }
-        else
+        catch (Exception ex)
         {
-            PanelPercentSize.Visibility = Visibility.Collapsed;
-            PanelPixelSize.Visibility = Visibility.Visible;
+            MessageBox.Show($"Error initializing window:\n\n{ex.Message}\n\n{ex.StackTrace}", 
+                "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            throw;
         }
         
-        // Update theme after window is loaded
-        this.Loaded += (s, e) => UpdateTheme();
+        try
+        {
+            SetupDragAndDrop();
+            
+            // Initialize resize UI visibility
+            if (RbResizePercent != null && RbResizePercent.IsChecked == true)
+            {
+                if (PanelPercentSize != null) PanelPercentSize.Visibility = Visibility.Visible;
+                if (PanelPixelSize != null) PanelPixelSize.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                if (PanelPercentSize != null) PanelPercentSize.Visibility = Visibility.Collapsed;
+                if (PanelPixelSize != null) PanelPixelSize.Visibility = Visibility.Visible;
+            }
+            
+            // Update theme after window is loaded
+            this.Loaded += (s, e) => 
+            {
+                try
+                {
+                    UpdateTheme();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Theme update error: {ex.Message}");
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error setting up window:\n\n{ex.Message}\n\n{ex.StackTrace}", 
+                "Setup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
     
     // ============================================
