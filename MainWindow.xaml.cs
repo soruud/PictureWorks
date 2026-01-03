@@ -117,8 +117,8 @@ public partial class MainWindow : Window
             _originalImage.EndInit();
             _originalImage.Freeze();
             
-            // Set current image to original
-            _currentImage = _originalImage.Clone();
+            // Set current image to original (clone it)
+            _currentImage = CloneBitmapImage(_originalImage);
             _currentImage.Freeze();
             
             // Clear undo/redo stacks
@@ -475,7 +475,7 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null) return;
         
-        _undoStack.Push(_currentImage.Clone());
+        _undoStack.Push(CloneBitmapImage(_currentImage));
         if (_undoStack.Count > MAX_UNDO_HISTORY)
         {
             // Remove oldest
@@ -500,7 +500,7 @@ public partial class MainWindow : Window
     {
         if (_undoStack.Count == 0 || _currentImage == null) return;
         
-        _redoStack.Push(_currentImage.Clone());
+        _redoStack.Push(CloneBitmapImage(_currentImage));
         _currentImage = _undoStack.Pop();
         UpdateImageDisplay();
         
@@ -515,7 +515,7 @@ public partial class MainWindow : Window
         
         if (_currentImage != null)
         {
-            _undoStack.Push(_currentImage.Clone());
+            _undoStack.Push(CloneBitmapImage(_currentImage));
         }
         
         _currentImage = _redoStack.Pop();
@@ -565,5 +565,30 @@ public partial class MainWindow : Window
     private void UpdateStatus(string message)
     {
         TxtStatus.Text = message;
+    }
+    
+    /// <summary>
+    /// Clone a BitmapImage by encoding and decoding it
+    /// </summary>
+    private BitmapImage CloneBitmapImage(BitmapImage source)
+    {
+        if (source == null) return null!;
+        
+        BitmapImage cloned = new();
+        PngBitmapEncoder encoder = new();
+        encoder.Frames.Add(BitmapFrame.Create(source));
+        
+        using (MemoryStream stream = new())
+        {
+            encoder.Save(stream);
+            stream.Seek(0, SeekOrigin.Begin);
+            cloned.BeginInit();
+            cloned.StreamSource = stream;
+            cloned.CacheOption = BitmapCacheOption.OnLoad;
+            cloned.EndInit();
+            cloned.Freeze();
+        }
+        
+        return cloned;
     }
 }
