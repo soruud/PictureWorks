@@ -1,19 +1,24 @@
-﻿<Window x:Class="PictureWorks.SplashScreen"
+<Window x:Class="PictureWorks.SplashScreen"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="PictureWorks" 
         WindowStyle="None"
-        AllowsTransparency="False"
-        Background="White"
+        AllowsTransparency="True"
+        Background="Transparent"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
         Topmost="True"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        Width="600" Height="400">
     <Grid>
-        <Image Source="pack://application:,,,/PW_LOGO.png" 
-               Stretch="None"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"/>
+        <Border Background="White" CornerRadius="10" BorderThickness="2" BorderBrush="#4A90E2">
+            <Grid>
+                <Image Source="pack://application:,,,/PW_LOGO.png" 
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Margin="20"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
-
