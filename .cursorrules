@@ -50,6 +50,17 @@ When creating new changes:
 - **Document significant changes** - Explain why code was modified if it's not immediately obvious
 - **Balance** - Choose the approach that best balances code quality, maintainability, and stability
 
+## Code Organization and Documentation Rules
+
+**IMPORTANT:**
+- **Always maintain clean, organized code** - Keep code tidy and well-structured
+- **Group related functions together** - Organize related functions in categories or sections for easy navigation
+- **Use clear section headers/comments** - Mark different sections clearly (e.g., "Image Resize Functions", "File I/O Functions", "UI Event Handlers")
+- **Add comprehensive comments** - Include good comments and explanatory text throughout the code
+- **Explain complex logic** - Document why code does what it does, not just what it does
+- **Prioritize readability** - Code length may increase due to comments, but this improves navigation and maintainability
+- **Structure for easy finding** - Organize code so related functionality is easy to locate later
+
 ## Language Rules
 
 **IMPORTANT:** All text must be in English:
