@@ -2,7 +2,10 @@
 
 ## Development Rules
 
-**IMPORTANT:** All code changes must be automatically committed and pushed to GitHub after implementation. This is a project rule that must always be followed.
+**IMPORTANT:** 
+- All code changes must be automatically committed and pushed to GitHub after implementation. This is a project rule that must always be followed.
+- **After each version build:** Always commit automatically after building a new version
+- **Only commit source code:** Never commit built files (.exe, build folders, etc.) - use .gitignore to exclude them
 
 ## Version Management
 
