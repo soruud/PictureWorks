@@ -399,17 +399,8 @@ public partial class MainWindow : Window
         
         SaveToUndoStack();
         
-        // Get actual displayed image size from Viewbox
-        double displayedWidth = ViewboxEdited.ActualWidth;
-        double displayedHeight = ViewboxEdited.ActualHeight;
-        
-        if (displayedWidth == 0 || displayedHeight == 0)
-        {
-            displayedWidth = _currentImage.PixelWidth;
-            displayedHeight = _currentImage.PixelHeight;
-        }
-        
-        // Calculate scale factors (Viewbox scales the canvas)
+        // Calculate scale factors (Canvas has pixel dimensions, Viewbox scales it)
+        // CanvasEdited.Width and Height are set to image pixel dimensions
         double scaleX = _currentImage.PixelWidth / CanvasEdited.Width;
         double scaleY = _currentImage.PixelHeight / CanvasEdited.Height;
         
