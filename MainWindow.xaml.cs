@@ -40,6 +40,14 @@ public partial class MainWindow : Window
     private Point _cropMoveStartPoint;
     
     // ============================================
+    // Zoom Variables
+    // ============================================
+    private double _zoomLevel = 1.0;
+    private const double MIN_ZOOM = 0.1;
+    private const double MAX_ZOOM = 5.0;
+    private const double ZOOM_STEP = 0.1;
+    
+    // ============================================
     // Constructor
     // ============================================
     public MainWindow()
@@ -178,6 +186,9 @@ public partial class MainWindow : Window
             _currentImage = CloneBitmapImage(_originalImage);
             _currentImage.Freeze();
             
+            // Reset zoom level when loading new image
+            _zoomLevel = 1.0;
+            
             // Clear undo/redo stacks
             _undoStack.Clear();
             _redoStack.Clear();
@@ -207,6 +218,9 @@ public partial class MainWindow : Window
         {
             ImgEdited.Source = _currentImage;
             
+            // Apply zoom level
+            ApplyZoom();
+            
             // Canvas will size itself based on the image's displayed size
             // We'll update it when the image is loaded and when window size changes
             if (!ImgEdited.IsLoaded)
@@ -232,12 +246,24 @@ public partial class MainWindow : Window
         }
     }
     
+    private void ApplyZoom()
+    {
+        if (ImgEdited != null && _currentImage != null)
+        {
+            // Apply zoom using ScaleTransform
+            ScaleTransform scaleTransform = new(_zoomLevel, _zoomLevel);
+            ImgEdited.RenderTransform = scaleTransform;
+            ImgEdited.RenderTransformOrigin = new Point(0.5, 0.5);
+        }
+    }
+    
     private void UpdateCanvasSize()
     {
         if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
         {
-            CanvasEdited.Width = ImgEdited.ActualWidth;
-            CanvasEdited.Height = ImgEdited.ActualHeight;
+            // Account for zoom level
+            CanvasEdited.Width = ImgEdited.ActualWidth * _zoomLevel;
+            CanvasEdited.Height = ImgEdited.ActualHeight * _zoomLevel;
         }
         else
         {
@@ -246,11 +272,36 @@ public partial class MainWindow : Window
             {
                 if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
                 {
-                    CanvasEdited.Width = ImgEdited.ActualWidth;
-                    CanvasEdited.Height = ImgEdited.ActualHeight;
+                    CanvasEdited.Width = ImgEdited.ActualWidth * _zoomLevel;
+                    CanvasEdited.Height = ImgEdited.ActualHeight * _zoomLevel;
                 }
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
+    }
+    
+    // ============================================
+    // Zoom Functions
+    // ============================================
+    private void ScrollViewerImage_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (_currentImage == null) return;
+        
+        // Determine zoom direction
+        if (e.Delta > 0)
+        {
+            // Zoom in
+            _zoomLevel = Math.Min(MAX_ZOOM, _zoomLevel + ZOOM_STEP);
+        }
+        else
+        {
+            // Zoom out
+            _zoomLevel = Math.Max(MIN_ZOOM, _zoomLevel - ZOOM_STEP);
+        }
+        
+        ApplyZoom();
+        UpdateCanvasSize();
+        
+        e.Handled = true;
     }
     
     private void EnableImageOperations(bool enable)
