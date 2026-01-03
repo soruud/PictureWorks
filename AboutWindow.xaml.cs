@@ -16,7 +16,7 @@ public partial class AboutWindow : Window
     private void BtnPayPal_Click(object sender, RoutedEventArgs e)
     {
         // Open PayPal donation URL
-        string paypalUrl = "https://paypal.me/soruud";
+        string paypalUrl = "https://www.paypal.com/donate?business=Soruud@gmail.com";
         try
         {
             Process.Start(new ProcessStartInfo
