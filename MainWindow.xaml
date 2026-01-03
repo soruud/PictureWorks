@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.1.3" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.1.4" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -124,6 +124,11 @@
                 
                 <Button x:Name="BtnUndo" Content="Undo" Style="{StaticResource ModernButton}" Click="BtnUndo_Click" IsEnabled="False"/>
                 <Button x:Name="BtnRedo" Content="Redo" Style="{StaticResource ModernButton}" Click="BtnRedo_Click" IsEnabled="False"/>
+                
+                <Separator Margin="10,0"/>
+                
+                <Button x:Name="BtnHelp" Content="Help" Style="{StaticResource ModernButton}" Click="BtnHelp_Click"/>
+                <Button x:Name="BtnAbout" Content="About" Style="{StaticResource ModernButton}" Click="BtnAbout_Click"/>
                 
                 <Separator Margin="10,0"/>
                 

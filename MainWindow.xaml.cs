@@ -1000,6 +1000,78 @@ public partial class MainWindow : Window
     }
     
     // ============================================
+    // Help and About Functions
+    // ============================================
+    private void BtnHelp_Click(object sender, RoutedEventArgs e)
+    {
+        string helpText = @"PictureWorks - Help
+
+HOW TO USE:
+
+1. OPEN IMAGE:
+   - Drag and drop an image onto the window, or
+   - Click the 'Open' button and select an image
+
+2. RESIZE:
+   - Select 'Percent' or 'Pixel' mode
+   - Enter the desired size
+   - Toggle 'Maintain Aspect' on/off
+   - Click 'Apply Resize'
+
+3. CROP:
+   - Right-click and drag on the image to select a crop area
+   - Left-click and drag to move the existing crop selection
+   - Use arrow keys to fine-tune position:
+     * Arrow Keys: Move 1 pixel
+     * Shift + Arrow Keys: Move 10 pixels
+   - Enter width/height in input fields and press Enter to set crop size
+   - Click 'Apply Crop' to apply the crop
+
+4. ROTATE:
+   - Click ↺ (left) or ↻ (right) rotation icons to rotate 90° at a time
+
+5. ZOOM:
+   - Use mouse wheel to zoom in/out
+   - Image stays anchored to top-left corner
+
+6. SAVE:
+   - Click 'Save As' button
+   - Choose format and location
+   - Click Save
+
+KEYBOARD SHORTCUTS:
+- Arrow Keys: Move crop selection (1px)
+- Shift + Arrow Keys: Move crop selection (10px)
+- Enter (in crop input fields): Apply crop size from input fields
+
+UNDO/REDO:
+- Use Undo/Redo buttons to revert or reapply operations
+- Supports up to 20 operations";
+
+        MessageBox.Show(helpText, "PictureWorks - Help", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+    
+    private void BtnAbout_Click(object sender, RoutedEventArgs e)
+    {
+        string aboutText = @"PictureWorks v1.1.3
+
+A Windows desktop application for image editing.
+
+Created by:
+Stig Ove K. Ruud
+
+Contact:
+Email: soruud@gmail.com
+
+Support this project:
+PayPal: soruud@gmail.com
+
+Thank you for using PictureWorks!";
+
+        MessageBox.Show(aboutText, "About PictureWorks", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+    
+    // ============================================
     // Theme Functions
     // ============================================
     private void BtnDarkMode_Click(object sender, RoutedEventArgs e)
