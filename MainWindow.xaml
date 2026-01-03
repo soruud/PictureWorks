@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.2.1" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.2.2" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
