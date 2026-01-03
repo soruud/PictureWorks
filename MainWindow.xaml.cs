@@ -179,6 +179,14 @@ public partial class MainWindow : Window
             // Update UI
             UpdateImageDisplay();
             EnableImageOperations(true);
+            
+            // Update crop size text boxes with current image dimensions
+            if (TxtCropWidth != null && TxtCropHeight != null)
+            {
+                TxtCropWidth.Text = _currentImage.PixelWidth.ToString();
+                TxtCropHeight.Text = _currentImage.PixelHeight.ToString();
+            }
+            
             UpdateStatus($"Loaded: {Path.GetFileName(filePath)} ({_originalImage.PixelWidth}x{_originalImage.PixelHeight})");
         }
         catch (Exception ex)
@@ -189,18 +197,32 @@ public partial class MainWindow : Window
     
     private void UpdateImageDisplay()
     {
-        if (_originalImage != null)
-        {
-            ImgOriginal.Source = _originalImage;
-        }
-        
         if (_currentImage != null)
         {
             ImgEdited.Source = _currentImage;
             
-            // Update canvas size to match image pixel dimensions
-            CanvasEdited.Width = _currentImage.PixelWidth;
-            CanvasEdited.Height = _currentImage.PixelHeight;
+            // Canvas will size itself based on the image's displayed size
+            // We'll update it when the image is loaded
+            if (!ImgEdited.IsLoaded)
+            {
+                ImgEdited.Loaded += (s, e) =>
+                {
+                    if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
+                    {
+                        CanvasEdited.Width = ImgEdited.ActualWidth;
+                        CanvasEdited.Height = ImgEdited.ActualHeight;
+                    }
+                };
+            }
+            else
+            {
+                // Update immediately if already loaded
+                if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
+                {
+                    CanvasEdited.Width = ImgEdited.ActualWidth;
+                    CanvasEdited.Height = ImgEdited.ActualHeight;
+                }
+            }
         }
     }
     
@@ -211,6 +233,7 @@ public partial class MainWindow : Window
         BtnRotateLeft.IsEnabled = enable;
         BtnRotateRight.IsEnabled = enable;
         BtnCrop.IsEnabled = enable;
+        BtnCropSetSize.IsEnabled = enable;
         BtnCropMoveUp.IsEnabled = enable;
         BtnCropMoveDown.IsEnabled = enable;
         BtnCropMoveLeft.IsEnabled = enable;
@@ -321,13 +344,17 @@ public partial class MainWindow : Window
         // Save to undo stack
         SaveToUndoStack();
         
-        // Create resized image using TransformedBitmap
-        TransformedBitmap resized = new(_currentImage, new ScaleTransform(
-            (double)newWidth / _currentImage.PixelWidth,
-            (double)newHeight / _currentImage.PixelHeight));
+        // Use RenderTargetBitmap for better quality resizing
+        RenderTargetBitmap renderTarget = new(newWidth, newHeight, 96, 96, PixelFormats.Pbgra32);
+        DrawingVisual drawingVisual = new();
+        using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+        {
+            drawingContext.DrawImage(_currentImage, new Rect(0, 0, newWidth, newHeight));
+        }
+        renderTarget.Render(drawingVisual);
         
         // Convert to BitmapImage via encoder
-        BitmapImage result = ConvertBitmapSourceToBitmapImage(resized);
+        BitmapImage result = ConvertBitmapSourceToBitmapImage(renderTarget);
         result.Freeze();
         
         _currentImage = result;
@@ -456,10 +483,26 @@ public partial class MainWindow : Window
         
         SaveToUndoStack();
         
-        // Calculate scale factors (Canvas has pixel dimensions, Viewbox scales it)
-        // CanvasEdited.Width and Height are set to image pixel dimensions
-        double scaleX = _currentImage.PixelWidth / CanvasEdited.Width;
-        double scaleY = _currentImage.PixelHeight / CanvasEdited.Height;
+        // Calculate scale factors - image is displayed with Stretch="Uniform" so we need to calculate the actual displayed size
+        double imageAspectRatio = (double)_currentImage.PixelWidth / _currentImage.PixelHeight;
+        double canvasAspectRatio = CanvasEdited.Width / CanvasEdited.Height;
+        
+        double displayedWidth, displayedHeight;
+        if (imageAspectRatio > canvasAspectRatio)
+        {
+            // Image is wider - fit to width
+            displayedWidth = CanvasEdited.Width;
+            displayedHeight = CanvasEdited.Width / imageAspectRatio;
+        }
+        else
+        {
+            // Image is taller - fit to height
+            displayedHeight = CanvasEdited.Height;
+            displayedWidth = CanvasEdited.Height * imageAspectRatio;
+        }
+        
+        double scaleX = _currentImage.PixelWidth / displayedWidth;
+        double scaleY = _currentImage.PixelHeight / displayedHeight;
         
         // Get crop rectangle from canvas
         double canvasX = Canvas.GetLeft(RectCropSelection);
@@ -467,9 +510,13 @@ public partial class MainWindow : Window
         double canvasWidth = RectCropSelection.Width;
         double canvasHeight = RectCropSelection.Height;
         
+        // Adjust for image centering in canvas
+        double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
+        double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
+        
         // Convert to image coordinates
-        int x = (int)(canvasX * scaleX);
-        int y = (int)(canvasY * scaleY);
+        int x = (int)((canvasX - offsetX) * scaleX);
+        int y = (int)((canvasY - offsetY) * scaleY);
         int width = (int)(canvasWidth * scaleX);
         int height = (int)(canvasHeight * scaleY);
         
@@ -498,6 +545,58 @@ public partial class MainWindow : Window
         UpdateImageDisplay();
         ClearRedoStack();
         UpdateStatus($"Cropped to {width}x{height}");
+    }
+    
+    private void BtnCropSetSize_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentImage == null) return;
+        
+        if (!int.TryParse(TxtCropWidth.Text, out int width) || width <= 0)
+        {
+            MessageBox.Show("Please enter a valid positive width.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        
+        if (!int.TryParse(TxtCropHeight.Text, out int height) || height <= 0)
+        {
+            MessageBox.Show("Please enter a valid positive height.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        
+        // Calculate displayed image size
+        double imageAspectRatio = (double)_currentImage.PixelWidth / _currentImage.PixelHeight;
+        double canvasAspectRatio = CanvasEdited.Width / CanvasEdited.Height;
+        
+        double displayedWidth, displayedHeight;
+        if (imageAspectRatio > canvasAspectRatio)
+        {
+            displayedWidth = CanvasEdited.Width;
+            displayedHeight = CanvasEdited.Width / imageAspectRatio;
+        }
+        else
+        {
+            displayedHeight = CanvasEdited.Height;
+            displayedWidth = CanvasEdited.Height * imageAspectRatio;
+        }
+        
+        double scaleX = displayedWidth / _currentImage.PixelWidth;
+        double scaleY = displayedHeight / _currentImage.PixelHeight;
+        
+        // Set crop rectangle size in canvas coordinates
+        double cropWidth = width * scaleX;
+        double cropHeight = height * scaleY;
+        
+        // Center the crop selection
+        double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
+        double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
+        double centerX = displayedWidth / 2 + offsetX;
+        double centerY = displayedHeight / 2 + offsetY;
+        
+        RectCropSelection.Width = cropWidth;
+        RectCropSelection.Height = cropHeight;
+        Canvas.SetLeft(RectCropSelection, centerX - cropWidth / 2);
+        Canvas.SetTop(RectCropSelection, centerY - cropHeight / 2);
+        RectCropSelection.Visibility = Visibility.Visible;
     }
     
     // ============================================
