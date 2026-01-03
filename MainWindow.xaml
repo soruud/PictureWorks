@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.0.7" Height="700" Width="1200" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.0.8" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -78,10 +78,10 @@
                     <TextBlock Text="Height:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{DynamicResource TextColor}"/>
                     <TextBox x:Name="TxtResizeHeight" Width="80" Margin="0,0,5,0" VerticalAlignment="Center" Text="800"/>
                 </StackPanel>
-                <!-- Percent mode: Slider -->
+                <!-- Percent mode: Input field -->
                 <StackPanel x:Name="PanelPercentSize" Orientation="Horizontal" Margin="5,0" VerticalAlignment="Center">
-                    <Slider x:Name="SliderResizePercent" Width="150" Minimum="1" Maximum="500" Value="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="SliderResizePercent_ValueChanged"/>
-                    <TextBlock x:Name="TxtPercentValue" Text="100%" Width="50" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
+                    <TextBox x:Name="TxtResizePercent" Width="80" Margin="0,0,5,0" VerticalAlignment="Center" Text="100"/>
+                    <TextBlock Text="%" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
                 </StackPanel>
                 <CheckBox x:Name="CbMaintainAspect" Content="Maintain Aspect" IsChecked="True" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
                 <Button x:Name="BtnResize" Content="Apply Resize" Style="{StaticResource ModernButton}" Click="BtnResize_Click" IsEnabled="False"/>
@@ -103,7 +103,7 @@
                 <Button x:Name="BtnCropMoveUp" Content="↑" Style="{StaticResource ModernButton}" Click="BtnCropMoveUp_Click" IsEnabled="False" Width="30" ToolTip="Move crop up"/>
                 <Button x:Name="BtnCropMoveDown" Content="↓" Style="{StaticResource ModernButton}" Click="BtnCropMoveDown_Click" IsEnabled="False" Width="30" ToolTip="Move crop down"/>
                 <Button x:Name="BtnCropMoveLeft" Content="←" Style="{StaticResource ModernButton}" Click="BtnCropMoveLeft_Click" IsEnabled="False" Width="30" ToolTip="Move crop left"/>
-                <Button x:Name="BtnCropMoveRight" Content="→" Style="{StaticResource ModernButton}" Click="BtnCropMoveRight_Click" IsEnabled="False" Width="30" ToolTip="Move crop right"/>
+                <Button x:Name="BtnCropMoveRight" Content="→" Style="{StaticResource ModernButton}" Click="BtnCropMoveRight_Click" IsEnabled="False" Width="30" ToolTip="Move crop right" FontFamily="Segoe UI Symbol"/>
                 <Button x:Name="BtnCropCenter" Content="⌂" Style="{StaticResource ModernButton}" Click="BtnCropCenter_Click" IsEnabled="False" Width="30" ToolTip="Center crop"/>
                 <Button x:Name="BtnCrop" Content="Apply Crop" Style="{StaticResource ModernButton}" Click="BtnCrop_Click" IsEnabled="False"/>
                 

@@ -35,7 +35,9 @@ public partial class MainWindow : Window
     // Crop Selection Variables
     // ============================================
     private bool _isCropMode = false;
+    private bool _isMovingCrop = false;
     private Point _cropStartPoint;
+    private Point _cropMoveStartPoint;
     
     // ============================================
     // Constructor
@@ -65,6 +67,10 @@ public partial class MainWindow : Window
             
             // Attach TextChanged handler after InitializeComponent
             TxtResizeWidth.TextChanged += TxtResizeWidth_TextChanged;
+            
+            // Attach keyboard event handler for arrow keys
+            this.KeyDown += MainWindow_KeyDown;
+            this.Focusable = true;
             
             // Initialize resize UI visibility after all controls are loaded
             this.Loaded += (s, e) => 
@@ -207,22 +213,22 @@ public partial class MainWindow : Window
             {
                 ImgEdited.Loaded += (s, e) =>
                 {
-                    if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
-                    {
-                        CanvasEdited.Width = ImgEdited.ActualWidth;
-                        CanvasEdited.Height = ImgEdited.ActualHeight;
-                    }
+                    UpdateCanvasSize();
                 };
             }
             else
             {
-                // Update immediately if already loaded
-                if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
-                {
-                    CanvasEdited.Width = ImgEdited.ActualWidth;
-                    CanvasEdited.Height = ImgEdited.ActualHeight;
-                }
+                UpdateCanvasSize();
             }
+        }
+    }
+    
+    private void UpdateCanvasSize()
+    {
+        if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
+        {
+            CanvasEdited.Width = ImgEdited.ActualWidth;
+            CanvasEdited.Height = ImgEdited.ActualHeight;
         }
     }
     
@@ -261,13 +267,6 @@ public partial class MainWindow : Window
         }
     }
     
-    private void SliderResizePercent_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (TxtPercentValue != null)
-        {
-            TxtPercentValue.Text = $"{(int)e.NewValue}%";
-        }
-    }
     
     private void BtnResize_Click(object sender, RoutedEventArgs e)
     {
@@ -279,8 +278,12 @@ public partial class MainWindow : Window
             
             if (RbResizePercent.IsChecked == true)
             {
-                // Resize by percentage from slider
-                double percent = SliderResizePercent.Value;
+                // Resize by percentage from input field
+                if (!double.TryParse(TxtResizePercent.Text, out double percent) || percent <= 0)
+                {
+                    MessageBox.Show("Please enter a valid positive percentage.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 newWidth = (int)(_currentImage.PixelWidth * percent / 100.0);
                 newHeight = (int)(_currentImage.PixelHeight * percent / 100.0);
             }
@@ -422,45 +425,173 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null) return;
         
-        _isCropMode = true;
-        _cropStartPoint = e.GetPosition(CanvasEdited);
-        RectCropSelection.Visibility = Visibility.Visible;
-        Canvas.SetLeft(RectCropSelection, _cropStartPoint.X);
-        Canvas.SetTop(RectCropSelection, _cropStartPoint.Y);
-        RectCropSelection.Width = 0;
-        RectCropSelection.Height = 0;
+        Point mousePos = e.GetPosition(CanvasEdited);
         
-        CanvasEdited.CaptureMouse();
+        // Right mouse button: Create new crop selection
+        if (e.RightButton == MouseButtonState.Pressed)
+        {
+            _isCropMode = true;
+            _isMovingCrop = false;
+            _cropStartPoint = mousePos;
+            RectCropSelection.Visibility = Visibility.Visible;
+            Canvas.SetLeft(RectCropSelection, _cropStartPoint.X);
+            Canvas.SetTop(RectCropSelection, _cropStartPoint.Y);
+            RectCropSelection.Width = 0;
+            RectCropSelection.Height = 0;
+            
+            CanvasEdited.CaptureMouse();
+        }
+        // Left mouse button: Move existing crop selection
+        else if (e.LeftButton == MouseButtonState.Pressed && RectCropSelection.Visibility == Visibility.Visible)
+        {
+            // Check if click is inside crop rectangle
+            double cropX = Canvas.GetLeft(RectCropSelection);
+            double cropY = Canvas.GetTop(RectCropSelection);
+            if (mousePos.X >= cropX && mousePos.X <= cropX + RectCropSelection.Width &&
+                mousePos.Y >= cropY && mousePos.Y <= cropY + RectCropSelection.Height)
+            {
+                _isMovingCrop = true;
+                _cropMoveStartPoint = mousePos;
+                CanvasEdited.CaptureMouse();
+            }
+        }
     }
     
     private void CanvasEdited_MouseMove(object sender, MouseEventArgs e)
     {
-        if (_currentImage == null || !_isCropMode || !CanvasEdited.IsMouseCaptured) return;
+        if (_currentImage == null) return;
         
         Point currentPoint = e.GetPosition(CanvasEdited);
-        double width = currentPoint.X - _cropStartPoint.X;
-        double height = currentPoint.Y - _cropStartPoint.Y;
         
-        RectCropSelection.Width = Math.Abs(width);
-        RectCropSelection.Height = Math.Abs(height);
-        
-        if (width < 0)
-            Canvas.SetLeft(RectCropSelection, currentPoint.X);
-        else
-            Canvas.SetLeft(RectCropSelection, _cropStartPoint.X);
+        // Right button drag: Create/resize crop selection
+        if (_isCropMode && e.RightButton == MouseButtonState.Pressed && CanvasEdited.IsMouseCaptured)
+        {
+            double width = currentPoint.X - _cropStartPoint.X;
+            double height = currentPoint.Y - _cropStartPoint.Y;
             
-        if (height < 0)
-            Canvas.SetTop(RectCropSelection, currentPoint.Y);
-        else
-            Canvas.SetTop(RectCropSelection, _cropStartPoint.Y);
+            RectCropSelection.Width = Math.Abs(width);
+            RectCropSelection.Height = Math.Abs(height);
+            
+            if (width < 0)
+                Canvas.SetLeft(RectCropSelection, currentPoint.X);
+            else
+                Canvas.SetLeft(RectCropSelection, _cropStartPoint.X);
+                
+            if (height < 0)
+                Canvas.SetTop(RectCropSelection, currentPoint.Y);
+            else
+                Canvas.SetTop(RectCropSelection, _cropStartPoint.Y);
+            
+            // Update input fields in realtime
+            UpdateCropInputFields();
+        }
+        // Left button drag: Move crop selection
+        else if (_isMovingCrop && e.LeftButton == MouseButtonState.Pressed && CanvasEdited.IsMouseCaptured)
+        {
+            double deltaX = currentPoint.X - _cropMoveStartPoint.X;
+            double deltaY = currentPoint.Y - _cropMoveStartPoint.Y;
+            
+            double currentX = Canvas.GetLeft(RectCropSelection);
+            double currentY = Canvas.GetTop(RectCropSelection);
+            double newX = currentX + deltaX;
+            double newY = currentY + deltaY;
+            
+            // Ensure crop stays within canvas bounds
+            newX = Math.Max(0, Math.Min(newX, CanvasEdited.Width - RectCropSelection.Width));
+            newY = Math.Max(0, Math.Min(newY, CanvasEdited.Height - RectCropSelection.Height));
+            
+            Canvas.SetLeft(RectCropSelection, newX);
+            Canvas.SetTop(RectCropSelection, newY);
+            
+            _cropMoveStartPoint = currentPoint;
+        }
     }
     
     private void CanvasEdited_MouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (_currentImage == null || !_isCropMode) return;
+        if (_currentImage == null) return;
         
-        CanvasEdited.ReleaseMouseCapture();
-        // Crop selection is now visible and ready for Apply Crop button
+        if (_isCropMode || _isMovingCrop)
+        {
+            CanvasEdited.ReleaseMouseCapture();
+            _isCropMode = false;
+            _isMovingCrop = false;
+            
+            // Update input fields when done
+            UpdateCropInputFields();
+        }
+    }
+    
+    private void UpdateCropInputFields()
+    {
+        if (_currentImage == null || RectCropSelection.Visibility != Visibility.Visible) return;
+        
+        // Calculate displayed image size
+        double imageAspectRatio = (double)_currentImage.PixelWidth / _currentImage.PixelHeight;
+        double canvasAspectRatio = CanvasEdited.Width / CanvasEdited.Height;
+        
+        double displayedWidth, displayedHeight;
+        if (imageAspectRatio > canvasAspectRatio)
+        {
+            displayedWidth = CanvasEdited.Width;
+            displayedHeight = CanvasEdited.Width / imageAspectRatio;
+        }
+        else
+        {
+            displayedHeight = CanvasEdited.Height;
+            displayedWidth = CanvasEdited.Height * imageAspectRatio;
+        }
+        
+        double scaleX = _currentImage.PixelWidth / displayedWidth;
+        double scaleY = _currentImage.PixelHeight / displayedHeight;
+        
+        // Get crop rectangle from canvas
+        double canvasX = Canvas.GetLeft(RectCropSelection);
+        double canvasY = Canvas.GetTop(RectCropSelection);
+        double canvasWidth = RectCropSelection.Width;
+        double canvasHeight = RectCropSelection.Height;
+        
+        // Adjust for image centering
+        double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
+        double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
+        
+        // Convert to image coordinates
+        int width = (int)(canvasWidth * scaleX);
+        int height = (int)(canvasHeight * scaleY);
+        
+        // Update input fields
+        if (TxtCropWidth != null && TxtCropHeight != null)
+        {
+            TxtCropWidth.Text = width.ToString();
+            TxtCropHeight.Text = height.ToString();
+        }
+    }
+    
+    private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (RectCropSelection.Visibility != Visibility.Visible || _currentImage == null) return;
+        
+        int moveAmount = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift) ? 10 : 1;
+        
+        switch (e.Key)
+        {
+            case Key.Up:
+                MoveCropSelection(0, -moveAmount);
+                e.Handled = true;
+                break;
+            case Key.Down:
+                MoveCropSelection(0, moveAmount);
+                e.Handled = true;
+                break;
+            case Key.Left:
+                MoveCropSelection(-moveAmount, 0);
+                e.Handled = true;
+                break;
+            case Key.Right:
+                MoveCropSelection(moveAmount, 0);
+                e.Handled = true;
+                break;
+        }
     }
     
     private void BtnCrop_Click(object sender, RoutedEventArgs e)
