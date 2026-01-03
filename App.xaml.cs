@@ -26,16 +26,21 @@ public partial class App : Application
         mainWindow.Show();
         
         // Show splash screen 0.2 seconds after main window is loaded
-        mainWindow.Loaded += async (s, args) =>
+        mainWindow.Loaded += (s, args) =>
         {
-            await System.Threading.Tasks.Task.Delay(200); // 0.2 seconds
-            
-            Dispatcher.Invoke(() =>
+            // Use DispatcherTimer to delay splash screen appearance
+            DispatcherTimer delayTimer = new()
             {
+                Interval = TimeSpan.FromMilliseconds(200) // 0.2 seconds
+            };
+            delayTimer.Tick += (sender, e) =>
+            {
+                delayTimer.Stop();
                 _splashScreen = new SplashScreen();
                 _splashScreen.Owner = mainWindow; // Set owner so it appears on top
                 _splashScreen.Show();
-            });
+            };
+            delayTimer.Start();
         };
     }
     
