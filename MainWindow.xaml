@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.1.2" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.1.3" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -115,7 +115,9 @@
                 <Button x:Name="BtnCropMoveRight" Style="{StaticResource ModernButton}" Click="BtnCropMoveRight_Click" IsEnabled="False" Width="40" ToolTip="Move crop right">
                     <TextBlock Text="→" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Segoe UI Symbol"/>
                 </Button>
-                <Button x:Name="BtnCropCenter" Content="⌂" Style="{StaticResource ModernButton}" Click="BtnCropCenter_Click" IsEnabled="False" Width="30" ToolTip="Center crop"/>
+                <Button x:Name="BtnCropCenter" Style="{StaticResource ModernButton}" Click="BtnCropCenter_Click" IsEnabled="False" Width="40" ToolTip="Center crop">
+                    <TextBlock Text="⦿" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Segoe UI Symbol"/>
+                </Button>
                 <Button x:Name="BtnCrop" Content="Apply Crop" Style="{StaticResource ModernButton}" Click="BtnCrop_Click" IsEnabled="False"/>
                 
                 <Separator Margin="10,0"/>
