@@ -39,6 +39,15 @@ When creating new changes:
 - Use descriptive commit messages
 - Test changes before committing
 
+## Code Modification Rules
+
+**IMPORTANT:** 
+- **Never modify working code unless strictly necessary**
+- Only change code that is broken, needs fixing, or when explicitly requested
+- If code is working correctly, leave it as is
+- When adding new features, add new code rather than modifying existing working code when possible
+- Refactoring should only be done when explicitly requested or when necessary for bug fixes
+
 ## Language Rules
 
 **IMPORTANT:** All text must be in English:
