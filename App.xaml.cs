@@ -10,8 +10,6 @@ namespace PictureWorks;
 /// </summary>
 public partial class App : Application
 {
-    private SplashScreen? _splashScreen;
-    
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -19,17 +17,6 @@ public partial class App : Application
         // Handle unhandled exceptions
         this.DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-        
-        // TEMPORARILY DISABLED: Splash screen causing startup issues
-        // Will be re-enabled in next version after fixing the issue
-        // Show splash screen
-        //_splashScreen = new SplashScreen();
-        //_splashScreen.Show();
-        
-        // Create and show main window
-        MainWindow mainWindow = new();
-        this.MainWindow = mainWindow;
-        mainWindow.Show();
     }
     
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
