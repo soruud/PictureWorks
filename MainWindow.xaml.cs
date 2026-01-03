@@ -698,7 +698,7 @@ public partial class MainWindow : Window
         UpdateStatus($"Cropped to {width}x{height}");
     }
     
-    private void BtnCropSetSize_Click(object sender, RoutedEventArgs e)
+    private void SetCropSizeFromInput()
     {
         if (_currentImage == null) return;
         
@@ -737,17 +737,51 @@ public partial class MainWindow : Window
         double cropWidth = width * scaleX;
         double cropHeight = height * scaleY;
         
-        // Center the crop selection
+        // Calculate offset for image centering
         double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
         double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
-        double centerX = displayedWidth / 2 + offsetX;
-        double centerY = displayedHeight / 2 + offsetY;
+        
+        // Keep current position or create in top-left corner if no crop exists
+        double cropX, cropY;
+        if (RectCropSelection.Visibility == Visibility.Visible)
+        {
+            cropX = Canvas.GetLeft(RectCropSelection);
+            cropY = Canvas.GetTop(RectCropSelection);
+        }
+        else
+        {
+            // Create crop in top-left corner of displayed image
+            cropX = offsetX;
+            cropY = offsetY;
+        }
+        
+        // Ensure crop stays within bounds
+        cropX = Math.Max(offsetX, Math.Min(cropX, offsetX + displayedWidth - cropWidth));
+        cropY = Math.Max(offsetY, Math.Min(cropY, offsetY + displayedHeight - cropHeight));
         
         RectCropSelection.Width = cropWidth;
         RectCropSelection.Height = cropHeight;
-        Canvas.SetLeft(RectCropSelection, centerX - cropWidth / 2);
-        Canvas.SetTop(RectCropSelection, centerY - cropHeight / 2);
+        Canvas.SetLeft(RectCropSelection, cropX);
+        Canvas.SetTop(RectCropSelection, cropY);
         RectCropSelection.Visibility = Visibility.Visible;
+    }
+    
+    private void TxtCropWidth_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            SetCropSizeFromInput();
+            e.Handled = true;
+        }
+    }
+    
+    private void TxtCropHeight_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            SetCropSizeFromInput();
+            e.Handled = true;
+        }
     }
     
     // ============================================
