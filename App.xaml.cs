@@ -20,16 +20,23 @@ public partial class App : Application
         this.DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         
-        // Show splash screen
-        _splashScreen = new SplashScreen();
-        _splashScreen.Show();
-        
-        // Create main window
+        // Create main window first
         MainWindow mainWindow = new();
         this.MainWindow = mainWindow;
         mainWindow.Show();
         
-        // Splash screen will close automatically after 4.5 seconds via its timer
+        // Show splash screen 0.2 seconds after main window is loaded
+        mainWindow.Loaded += async (s, args) =>
+        {
+            await System.Threading.Tasks.Task.Delay(200); // 0.2 seconds
+            
+            Dispatcher.Invoke(() =>
+            {
+                _splashScreen = new SplashScreen();
+                _splashScreen.Owner = mainWindow; // Set owner so it appears on top
+                _splashScreen.Show();
+            });
+        };
     }
     
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
