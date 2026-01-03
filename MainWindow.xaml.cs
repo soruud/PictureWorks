@@ -147,20 +147,9 @@ public partial class MainWindow : Window
         {
             ImgEdited.Source = _currentImage;
             
-            // Update canvas size when image is loaded
-            if (ImgEdited.IsLoaded)
-            {
-                CanvasEdited.Width = ImgEdited.ActualWidth > 0 ? ImgEdited.ActualWidth : _currentImage.PixelWidth;
-                CanvasEdited.Height = ImgEdited.ActualHeight > 0 ? ImgEdited.ActualHeight : _currentImage.PixelHeight;
-            }
-            else
-            {
-                ImgEdited.Loaded += (s, e) =>
-                {
-                    CanvasEdited.Width = ImgEdited.ActualWidth > 0 ? ImgEdited.ActualWidth : _currentImage.PixelWidth;
-                    CanvasEdited.Height = ImgEdited.ActualHeight > 0 ? ImgEdited.ActualHeight : _currentImage.PixelHeight;
-                };
-            }
+            // Update canvas size to match image pixel dimensions
+            CanvasEdited.Width = _currentImage.PixelWidth;
+            CanvasEdited.Height = _currentImage.PixelHeight;
         }
     }
     
@@ -171,46 +160,78 @@ public partial class MainWindow : Window
         BtnRotateLeft.IsEnabled = enable;
         BtnRotateRight.IsEnabled = enable;
         BtnCrop.IsEnabled = enable;
+        BtnCropMoveUp.IsEnabled = enable;
+        BtnCropMoveDown.IsEnabled = enable;
+        BtnCropMoveLeft.IsEnabled = enable;
+        BtnCropMoveRight.IsEnabled = enable;
+        BtnCropCenter.IsEnabled = enable;
     }
     
     // ============================================
     // Resize Functions
     // ============================================
+    private void RbResizeMode_Changed(object sender, RoutedEventArgs e)
+    {
+        if (RbResizePercent.IsChecked == true)
+        {
+            PanelPercentSize.Visibility = Visibility.Visible;
+            PanelPixelSize.Visibility = Visibility.Collapsed;
+        }
+        else if (RbResizePixel.IsChecked == true)
+        {
+            PanelPercentSize.Visibility = Visibility.Collapsed;
+            PanelPixelSize.Visibility = Visibility.Visible;
+        }
+    }
+    
+    private void SliderResizePercent_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TxtPercentValue != null)
+        {
+            TxtPercentValue.Text = $"{(int)e.NewValue}%";
+        }
+    }
+    
     private void BtnResize_Click(object sender, RoutedEventArgs e)
     {
         if (_currentImage == null) return;
         
         try
         {
-            if (!double.TryParse(TxtResizeValue.Text, out double value) || value <= 0)
-            {
-                MessageBox.Show("Please enter a valid positive number.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            
             int newWidth, newHeight;
             
             if (RbResizePercent.IsChecked == true)
             {
-                // Resize by percentage
-                newWidth = (int)(_currentImage.PixelWidth * value / 100.0);
-                newHeight = (int)(_currentImage.PixelHeight * value / 100.0);
+                // Resize by percentage from slider
+                double percent = SliderResizePercent.Value;
+                newWidth = (int)(_currentImage.PixelWidth * percent / 100.0);
+                newHeight = (int)(_currentImage.PixelHeight * percent / 100.0);
             }
             else
             {
-                // Resize by pixel
-                newWidth = (int)value;
+                // Resize by pixel - get width and height from text boxes
+                if (!int.TryParse(TxtResizeWidth.Text, out newWidth) || newWidth <= 0)
+                {
+                    MessageBox.Show("Please enter a valid positive width.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                
                 if (CbMaintainAspect.IsChecked == true)
                 {
-                    // Calculate height based on aspect ratio
+                    // Calculate height based on aspect ratio from width
                     double aspectRatio = (double)_currentImage.PixelHeight / _currentImage.PixelWidth;
                     newHeight = (int)(newWidth * aspectRatio);
+                    // Update height text box
+                    TxtResizeHeight.Text = newHeight.ToString();
                 }
                 else
                 {
-                    // Without aspect ratio, use same value for height (user can adjust manually if needed)
-                    // For now, we'll use the same value - in a full implementation, you might want a separate height field
-                    newHeight = (int)(_currentImage.PixelHeight * value / _currentImage.PixelWidth);
+                    // Get height from text box
+                    if (!int.TryParse(TxtResizeHeight.Text, out newHeight) || newHeight <= 0)
+                    {
+                        MessageBox.Show("Please enter a valid positive height.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
                 }
             }
             
@@ -220,6 +241,19 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             MessageBox.Show($"Error resizing image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+    
+    private void TxtResizeWidth_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (CbMaintainAspect.IsChecked == true && _currentImage != null)
+        {
+            if (int.TryParse(TxtResizeWidth.Text, out int width) && width > 0)
+            {
+                double aspectRatio = (double)_currentImage.PixelHeight / _currentImage.PixelWidth;
+                int height = (int)(width * aspectRatio);
+                TxtResizeHeight.Text = height.ToString();
+            }
         }
     }
     
@@ -365,9 +399,9 @@ public partial class MainWindow : Window
         
         SaveToUndoStack();
         
-        // Get actual displayed image size
-        double displayedWidth = ImgEdited.ActualWidth;
-        double displayedHeight = ImgEdited.ActualHeight;
+        // Get actual displayed image size from Viewbox
+        double displayedWidth = ViewboxEdited.ActualWidth;
+        double displayedHeight = ViewboxEdited.ActualHeight;
         
         if (displayedWidth == 0 || displayedHeight == 0)
         {
@@ -375,9 +409,9 @@ public partial class MainWindow : Window
             displayedHeight = _currentImage.PixelHeight;
         }
         
-        // Calculate scale factors
-        double scaleX = _currentImage.PixelWidth / displayedWidth;
-        double scaleY = _currentImage.PixelHeight / displayedHeight;
+        // Calculate scale factors (Viewbox scales the canvas)
+        double scaleX = _currentImage.PixelWidth / CanvasEdited.Width;
+        double scaleY = _currentImage.PixelHeight / CanvasEdited.Height;
         
         // Get crop rectangle from canvas
         double canvasX = Canvas.GetLeft(RectCropSelection);
@@ -416,6 +450,58 @@ public partial class MainWindow : Window
         UpdateImageDisplay();
         ClearRedoStack();
         UpdateStatus($"Cropped to {width}x{height}");
+    }
+    
+    // ============================================
+    // Crop Movement Functions
+    // ============================================
+    private void MoveCropSelection(double deltaX, double deltaY)
+    {
+        if (RectCropSelection.Visibility != Visibility.Visible || _currentImage == null) return;
+        
+        double currentX = Canvas.GetLeft(RectCropSelection);
+        double currentY = Canvas.GetTop(RectCropSelection);
+        double newX = currentX + deltaX;
+        double newY = currentY + deltaY;
+        
+        // Ensure crop stays within canvas bounds
+        newX = Math.Max(0, Math.Min(newX, CanvasEdited.Width - RectCropSelection.Width));
+        newY = Math.Max(0, Math.Min(newY, CanvasEdited.Height - RectCropSelection.Height));
+        
+        Canvas.SetLeft(RectCropSelection, newX);
+        Canvas.SetTop(RectCropSelection, newY);
+    }
+    
+    private void BtnCropMoveUp_Click(object sender, RoutedEventArgs e)
+    {
+        MoveCropSelection(0, -10);
+    }
+    
+    private void BtnCropMoveDown_Click(object sender, RoutedEventArgs e)
+    {
+        MoveCropSelection(0, 10);
+    }
+    
+    private void BtnCropMoveLeft_Click(object sender, RoutedEventArgs e)
+    {
+        MoveCropSelection(-10, 0);
+    }
+    
+    private void BtnCropMoveRight_Click(object sender, RoutedEventArgs e)
+    {
+        MoveCropSelection(10, 0);
+    }
+    
+    private void BtnCropCenter_Click(object sender, RoutedEventArgs e)
+    {
+        if (RectCropSelection.Visibility != Visibility.Visible || _currentImage == null) return;
+        
+        // Center the crop selection on the canvas
+        double centerX = (CanvasEdited.Width - RectCropSelection.Width) / 2;
+        double centerY = (CanvasEdited.Height - RectCropSelection.Height) / 2;
+        
+        Canvas.SetLeft(RectCropSelection, Math.Max(0, centerX));
+        Canvas.SetTop(RectCropSelection, Math.Max(0, centerY));
     }
     
     // ============================================

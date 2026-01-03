@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.0.0" Height="700" Width="1200" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.0.2" Height="700" Width="1200" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -69,9 +69,20 @@
                 <Separator Margin="10,0"/>
                 
                 <TextBlock Text="Resize:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
-                <RadioButton x:Name="RbResizePercent" Content="Percent" IsChecked="True" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
-                <RadioButton x:Name="RbResizePixel" Content="Pixel" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
-                <TextBox x:Name="TxtResizeValue" Width="80" Margin="5,0" VerticalAlignment="Center" Text="100"/>
+                <RadioButton x:Name="RbResizePercent" Content="Percent" IsChecked="True" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}" Checked="RbResizeMode_Changed" Unchecked="RbResizeMode_Changed"/>
+                <RadioButton x:Name="RbResizePixel" Content="Pixel" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}" Checked="RbResizeMode_Changed" Unchecked="RbResizeMode_Changed"/>
+                <!-- Pixel mode: Width x Height -->
+                <StackPanel x:Name="PanelPixelSize" Orientation="Horizontal" Margin="5,0" VerticalAlignment="Center">
+                    <TextBlock Text="Width:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{DynamicResource TextColor}"/>
+                    <TextBox x:Name="TxtResizeWidth" Width="80" Margin="0,0,5,0" VerticalAlignment="Center" Text="1200" TextChanged="TxtResizeWidth_TextChanged"/>
+                    <TextBlock Text="Height:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{DynamicResource TextColor}"/>
+                    <TextBox x:Name="TxtResizeHeight" Width="80" Margin="0,0,5,0" VerticalAlignment="Center" Text="800"/>
+                </StackPanel>
+                <!-- Percent mode: Slider -->
+                <StackPanel x:Name="PanelPercentSize" Orientation="Horizontal" Margin="5,0" VerticalAlignment="Center">
+                    <Slider x:Name="SliderResizePercent" Width="150" Minimum="1" Maximum="500" Value="100" TickFrequency="10" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="SliderResizePercent_ValueChanged"/>
+                    <TextBlock x:Name="TxtPercentValue" Text="100%" Width="50" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
+                </StackPanel>
                 <CheckBox x:Name="CbMaintainAspect" Content="Maintain Aspect" IsChecked="True" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
                 <Button x:Name="BtnResize" Content="Apply Resize" Style="{StaticResource ModernButton}" Click="BtnResize_Click" IsEnabled="False"/>
                 
@@ -83,6 +94,12 @@
                 
                 <Separator Margin="10,0"/>
                 
+                <TextBlock Text="Crop:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Button x:Name="BtnCropMoveUp" Content="↑" Style="{StaticResource ModernButton}" Click="BtnCropMoveUp_Click" IsEnabled="False" Width="30" ToolTip="Move crop up"/>
+                <Button x:Name="BtnCropMoveDown" Content="↓" Style="{StaticResource ModernButton}" Click="BtnCropMoveDown_Click" IsEnabled="False" Width="30" ToolTip="Move crop down"/>
+                <Button x:Name="BtnCropMoveLeft" Content="←" Style="{StaticResource ModernButton}" Click="BtnCropMoveLeft_Click" IsEnabled="False" Width="30" ToolTip="Move crop left"/>
+                <Button x:Name="BtnCropMoveRight" Content="→" Style="{StaticResource ModernButton}" Click="BtnCropMoveRight_Click" IsEnabled="False" Width="30" ToolTip="Move crop right"/>
+                <Button x:Name="BtnCropCenter" Content="⌂" Style="{StaticResource ModernButton}" Click="BtnCropCenter_Click" IsEnabled="False" Width="30" ToolTip="Center crop"/>
                 <Button x:Name="BtnCrop" Content="Apply Crop" Style="{StaticResource ModernButton}" Click="BtnCrop_Click" IsEnabled="False"/>
                 
                 <Separator Margin="10,0"/>
@@ -115,7 +132,9 @@
                     <TextBlock Text="Original Image" HorizontalAlignment="Center" 
                                Padding="5" FontWeight="Bold" Foreground="{DynamicResource TextColor}"/>
                     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Image x:Name="ImgOriginal" Stretch="Uniform" Margin="10"/>
+                        <Viewbox Stretch="Uniform">
+                            <Image x:Name="ImgOriginal" Stretch="None"/>
+                        </Viewbox>
                     </ScrollViewer>
                 </Grid>
             </Border>
@@ -134,16 +153,18 @@
                     <TextBlock Text="Edited Image" HorizontalAlignment="Center" 
                                Padding="5" FontWeight="Bold" Foreground="{DynamicResource TextColor}"/>
                     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                        <Canvas x:Name="CanvasEdited" Background="Transparent" Margin="10"
-                                MouseDown="CanvasEdited_MouseDown"
-                                MouseMove="CanvasEdited_MouseMove"
-                                MouseUp="CanvasEdited_MouseUp">
-                            <Image x:Name="ImgEdited" Stretch="Uniform"/>
-                            <!-- Crop selection rectangle -->
-                            <Rectangle x:Name="RectCropSelection" Stroke="Red" StrokeThickness="2" 
-                                      StrokeDashArray="5,5" Visibility="Collapsed" 
-                                      Fill="#40FF0000"/>
-                        </Canvas>
+                        <Viewbox x:Name="ViewboxEdited" Stretch="Uniform">
+                            <Canvas x:Name="CanvasEdited" Background="Transparent"
+                                    MouseDown="CanvasEdited_MouseDown"
+                                    MouseMove="CanvasEdited_MouseMove"
+                                    MouseUp="CanvasEdited_MouseUp">
+                                <Image x:Name="ImgEdited" Stretch="None"/>
+                                <!-- Crop selection rectangle -->
+                                <Rectangle x:Name="RectCropSelection" Stroke="Red" StrokeThickness="2" 
+                                          StrokeDashArray="5,5" Visibility="Collapsed" 
+                                          Fill="#40FF0000"/>
+                            </Canvas>
+                        </Viewbox>
                     </ScrollViewer>
                 </Grid>
             </Border>
