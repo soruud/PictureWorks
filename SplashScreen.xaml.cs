@@ -29,3 +29,4 @@ public partial class SplashScreen : Window
         this.Close();
     }
 }
+
