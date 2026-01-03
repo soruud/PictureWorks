@@ -24,14 +24,12 @@ public partial class App : Application
         _splashScreen = new SplashScreen();
         _splashScreen.Show();
         
-        // Wait for splash screen to close before showing main window
-        _splashScreen.Closed += (s, args) =>
-        {
-            // Create and show main window after splash screen closes
-            MainWindow mainWindow = new();
-            this.MainWindow = mainWindow;
-            mainWindow.Show();
-        };
+        // Create main window
+        MainWindow mainWindow = new();
+        this.MainWindow = mainWindow;
+        mainWindow.Show();
+        
+        // Splash screen will close automatically after 4.5 seconds via its timer
     }
     
     private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
