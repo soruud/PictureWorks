@@ -46,11 +46,12 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <TextBlock Grid.Row="0" Text="PictureWorks v1.1.6" 
+        <TextBlock Grid.Row="0" Text="PictureWorks v1.1.7" 
                    FontSize="20" FontWeight="Bold" 
                    HorizontalAlignment="Center" 
                    Margin="0,0,0,15"
@@ -92,11 +93,14 @@
             </Button>
         </StackPanel>
         
-        <Button Grid.Row="5" Content="Close" 
+        <!-- Spacer row -->
+        <RowDefinition Grid.Row="5" Height="*"/>
+        
+        <Button Grid.Row="6" Content="Close" 
                 Click="BtnClose_Click" 
                 Width="80" 
                 Height="30"
-                Margin="0,20,0,0"
+                Margin="0,20,0,20"
                 HorizontalAlignment="Center"
                 Style="{StaticResource ModernButton}"/>
     </Grid>
