@@ -6,15 +6,28 @@
 
 ## Version Management
 
+**IMPORTANT:** Version numbering and build rules:
+- **Starting version:** v1.0.0
+- **Version format:** MAJOR.MINOR.PATCH (e.g., 1.0.0, 1.0.1, 1.1.0, 2.0.0)
+- **Version increment rules:**
+  - Small changes/bugfixes: Increment PATCH (last number) by 1 (1.0.0 → 1.0.1)
+  - PATCH number can never be higher than 9 (1.0.9 → 1.1.0)
+  - MINOR (middle number) increments when PATCH reaches 9
+  - MAJOR (first number) increments ONLY when explicitly requested by user (for major changes/additions)
+- **Never overwrite old versions** - always create new version files
+- **Executable filename must always include version number** (e.g., `PictureWorks_v1.0.0.exe`)
+
 When creating new changes:
-1. Commit changes with descriptive message
-2. Push to GitHub automatically (important rule!)
-3. Create new tag if needed:
+1. Increment version according to rules above
+2. Build executable (.exe) automatically with version number in filename
+3. Commit changes with descriptive message
+4. Push to GitHub automatically (important rule!)
+5. Create new tag:
    ```bash
    git tag -a "v1.0.0" -m "Description of changes"
    git push origin --tags
    ```
-4. Update version history/documentation if applicable
+6. Update version history/documentation if applicable
 
 ## General Guidelines
 
@@ -30,6 +43,15 @@ When creating new changes:
 - All text in the program/application must be in English
 - All user-facing text, labels, messages, and documentation must be in English
 - Code comments should be in English
+
+## Build Rules
+
+**IMPORTANT:** Build automation rules:
+- **Always build to executable (.exe) automatically** after code changes
+- **Executable filename format:** `PictureWorks_v{MAJOR}.{MINOR}.{PATCH}.exe`
+- **Example:** `PictureWorks_v1.0.0.exe`, `PictureWorks_v1.0.1.exe`, `PictureWorks_v1.1.0.exe`
+- **Never overwrite existing executable files** - each version gets its own file
+- Build should happen automatically as part of the development workflow
 
 ## PictureWorks Specific Rules
 <!-- Add project-specific rules here as the project develops -->
