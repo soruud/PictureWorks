@@ -24,23 +24,9 @@ public partial class App : Application
         _splashScreen = new SplashScreen();
         _splashScreen.Show();
         
-        // Create main window but don't show it yet
+        // Create and show main window immediately
+        // The splash screen will close itself via its timer after 4 seconds
         MainWindow mainWindow = new();
-        
-        // Close splash screen when main window is loaded
-        mainWindow.Loaded += (s, args) =>
-        {
-            // Wait a bit more to ensure splash is visible
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                if (_splashScreen != null)
-                {
-                    _splashScreen.Close();
-                    _splashScreen = null;
-                }
-            }), DispatcherPriority.Loaded);
-        };
-        
         this.MainWindow = mainWindow;
         mainWindow.Show();
     }
@@ -61,4 +47,3 @@ public partial class App : Application
         }
     }
 }
-
