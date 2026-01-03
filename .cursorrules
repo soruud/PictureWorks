@@ -1,0 +1,27 @@
+# Global Project Rules for PictureWorks
+
+## Development Rules
+
+**IMPORTANT:** All code changes must be automatically committed and pushed to GitHub after implementation. This is a project rule that must always be followed.
+
+## Version Management
+
+When creating new changes:
+1. Commit changes with descriptive message
+2. Push to GitHub automatically (important rule!)
+3. Create new tag if needed:
+   ```bash
+   git tag -a "v1.0.0" -m "Description of changes"
+   git push origin --tags
+   ```
+4. Update version history/documentation if applicable
+
+## General Guidelines
+
+- Always update README.md when adding new features or making significant changes
+- Keep documentation in sync with code changes
+- Use descriptive commit messages
+- Test changes before committing
+
+## PictureWorks Specific Rules
+<!-- Add project-specific rules here as the project develops -->
