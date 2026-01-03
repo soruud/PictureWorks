@@ -8,7 +8,8 @@
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False"
         Topmost="True"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight">
     <Grid>
         <Image Source="pack://application:,,,/PW_LOGO.png" 
                Stretch="None"
