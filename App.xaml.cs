@@ -20,12 +20,13 @@ public partial class App : Application
         this.DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         
+        // TEMPORARILY DISABLED: Splash screen causing startup issues
+        // Will be re-enabled in next version after fixing the issue
         // Show splash screen
-        _splashScreen = new SplashScreen();
-        _splashScreen.Show();
+        //_splashScreen = new SplashScreen();
+        //_splashScreen.Show();
         
-        // Create and show main window immediately
-        // The splash screen will close itself via its timer after 4 seconds
+        // Create and show main window
         MainWindow mainWindow = new();
         this.MainWindow = mainWindow;
         mainWindow.Show();
