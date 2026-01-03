@@ -93,9 +93,6 @@
             </Button>
         </StackPanel>
         
-        <!-- Spacer row -->
-        <RowDefinition Grid.Row="5" Height="*"/>
-        
         <Button Grid.Row="6" Content="Close" 
                 Click="BtnClose_Click" 
                 Width="80" 
