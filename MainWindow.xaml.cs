@@ -218,7 +218,10 @@ public partial class MainWindow : Window
         {
             ImgEdited.Source = _currentImage;
             
-            // Apply zoom level
+            // Reset transform to ensure image starts at top-left
+            ImgEdited.RenderTransform = null;
+            
+            // Apply zoom level (will set RenderTransformOrigin to top-left)
             ApplyZoom();
             
             // Canvas will size itself based on the image's displayed size

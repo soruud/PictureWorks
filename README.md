@@ -6,13 +6,19 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 - **Open Images**: Drag & drop or use File → Open menu
 - **Resize**: Resize by percentage or pixel size, with optional aspect ratio preservation
-- **Crop**: Drag-to-select area with live preview
-- **Rotate**: Rotate in 90° steps (left/right) using arrow buttons
+- **Crop**: 
+  - Right-click and drag to select crop area
+  - Left-click and drag to move existing crop selection
+  - Use arrow keys to fine-tune crop position (Shift+Arrow for 10px steps)
+  - Enter crop dimensions manually and press Enter
+  - Crop selection anchored to top-left corner
+- **Rotate**: Rotate in 90° steps (left/right) using rotation icons (↺ ↻)
+- **Zoom**: Mouse wheel zoom in/out (0.1x steps, range 0.1x - 5.0x)
 - **Save As**: Save images in multiple formats (PNG, JPG, BMP, GIF, TIFF, WEBP)
-- **Undo/Redo**: Full undo/redo support for all operations
-- **Side-by-Side Preview**: View original and edited images simultaneously
+- **Undo/Redo**: Full undo/redo support for all operations (up to 20 steps)
 - **Dark Mode**: Toggle between light and dark themes
 - **Modern UI**: Clean, modern interface with custom color scheme (not Windows gray)
+- **Image Anchoring**: Image always anchored to top-left corner for consistent positioning
 
 ## Supported Formats
 
@@ -26,12 +32,12 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 ## Requirements
 
 - Windows 10/11
-- .NET 9.0 Runtime (included in executable)
+- .NET 8.0 Runtime (included in self-contained executable)
 
 ## Installation
 
-1. Download `PictureWorks_v1.0.0.exe` from the `Ready Builds` folder
-2. Run the executable - no installation required
+1. Download `PictureWorks_v1.1.2.exe` (or latest version) from the `Ready Builds` folder
+2. Run the executable - no installation required (self-contained build)
 
 ## Usage
 
@@ -42,18 +48,69 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
    - Toggle "Maintain Aspect" on/off
    - Click "Apply Resize"
 3. **Crop**: 
-   - Drag on the edited image preview to select an area
-   - Click "Apply Crop" to crop the image
+   - **Right-click and drag** on the image to select a crop area
+   - **Left-click and drag** to move the existing crop selection
+   - Use **arrow keys** to fine-tune position (1px per press, Shift+Arrow for 10px)
+   - Enter width/height in input fields and press **Enter** to set crop size
+   - Click "Apply Crop" to apply the crop
 4. **Rotate**: 
-   - Click ← (left) or → (right) arrow buttons to rotate 90° at a time
-5. **Save**: 
+   - Click ↺ (left) or ↻ (right) rotation icons to rotate 90° at a time
+5. **Zoom**: 
+   - Use **mouse wheel** to zoom in/out
+   - Image stays anchored to top-left corner
+6. **Save**: 
    - Click "Save As" button
    - Choose format and location
    - Click Save
 
-## Version
+## Keyboard Shortcuts
 
-Current version: **v1.0.0**
+- **Arrow Keys**: Move crop selection (1px)
+- **Shift + Arrow Keys**: Move crop selection (10px)
+- **Enter** (in crop input fields): Apply crop size from input fields
+
+## Version History
+
+### v1.1.2 (Current)
+- Fixed image anchoring to top-left corner for zoom, resize, and crop operations
+- Image no longer shifts position during operations
+
+### v1.1.1
+- Fixed mouse wheel zoom - now zooms instead of scrolling
+
+### v1.1.0
+- Fixed button sizes and symbols (crop buttons now same size as rotate buttons)
+- Added rotation icons (↺ ↻) instead of arrows
+- Implemented mouse wheel zoom functionality
+
+### v1.0.9
+- Removed "Set Size" button
+- Crop size updates on Enter key press
+- Crop created in top-left corner if missing
+- Fixed arrow symbols for crop buttons
+
+### v1.0.8
+- Single image view with proper scaling
+- Improved resize quality using RenderTargetBitmap
+- Enhanced crop functionality with keyboard controls
+- Real-time crop input field updates
+
+### v1.0.7
+- Fixed version numbering (corrected from 1.1.0)
+- Image scaling improvements
+- Crop UI enhancements
+
+### v1.0.6
+- Fixed null reference exceptions
+- Improved error handling
+- Self-contained build support
+
+### v1.0.5 and earlier
+- Initial releases with basic functionality
+
+## Current Version
+
+**v1.1.2** - Latest stable release
 
 ## License
 
