@@ -18,11 +18,11 @@
   - MINOR (middle number) increments when PATCH reaches 9
   - MAJOR (first number) increments ONLY when explicitly requested by user (for major changes/additions)
 - **Never overwrite old versions** - always create new version files
-- **Executable filename must always include version number** (e.g., `PictureWorks_v1.0.0.exe`)
+- **Output filename must always include version number** (e.g., `PictureWorks_v1.0.0.exe`, `Plugin_v1.0.0.dll`)
 
 When creating new changes:
 1. Increment version according to rules above
-2. Build executable (.exe) automatically with version number in filename
+2. Build finished product automatically with version number in filename (adapt to project type: .exe, .dll, .jar, etc.)
 3. Commit changes with descriptive message
 4. Push to GitHub automatically (important rule!)
 5. Create new tag:
@@ -72,11 +72,13 @@ When creating new changes:
 ## Build Rules
 
 **IMPORTANT:** Build automation rules:
-- **Always build to executable (.exe) automatically** after code changes
-- **Executable filename format:** `PictureWorks_v{MAJOR}.{MINOR}.{PATCH}.exe`
-- **Example:** `PictureWorks_v1.0.0.exe`, `PictureWorks_v1.0.1.exe`, `PictureWorks_v1.1.0.exe`
-- **Never overwrite existing executable files** - each version gets its own file
+- **Always build to finished product automatically** after code changes
+- **Product type depends on project** (e.g., .exe for Windows apps, .dll for BepInEx mods, .jar for Java, etc.)
+- **Output filename format:** `{ProjectName}_v{MAJOR}.{MINOR}.{PATCH}.{extension}`
+- **Example:** `PictureWorks_v1.0.0.exe`, `LuckyDoorzPlugin_v2.4.5.dll`, etc.
+- **Never overwrite existing build files** - each version gets its own file
 - Build should happen automatically as part of the development workflow
+- **Build to whatever the project requires** - adapt to the specific project type
 
 ## PictureWorks Specific Rules
 <!-- Add project-specific rules here as the project develops -->
