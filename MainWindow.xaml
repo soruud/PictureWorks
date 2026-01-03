@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.0.4" Height="700" Width="1200" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v1.0.5" Height="700" Width="1200" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -69,8 +69,8 @@
                 <Separator Margin="10,0"/>
                 
                 <TextBlock Text="Resize:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
-                <RadioButton x:Name="RbResizePercent" Content="Percent" IsChecked="True" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}" Checked="RbResizeMode_Changed" Unchecked="RbResizeMode_Changed"/>
-                <RadioButton x:Name="RbResizePixel" Content="Pixel" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}" Checked="RbResizeMode_Changed" Unchecked="RbResizeMode_Changed"/>
+                <RadioButton x:Name="RbResizePercent" Content="Percent" IsChecked="True" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
+                <RadioButton x:Name="RbResizePixel" Content="Pixel" Margin="5,0" VerticalAlignment="Center" Foreground="{DynamicResource TextColor}"/>
                 <!-- Pixel mode: Width x Height -->
                 <StackPanel x:Name="PanelPixelSize" Orientation="Horizontal" Margin="5,0" VerticalAlignment="Center">
                     <TextBlock Text="Width:" VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{DynamicResource TextColor}"/>

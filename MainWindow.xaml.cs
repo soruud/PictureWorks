@@ -57,28 +57,34 @@ public partial class MainWindow : Window
         {
             SetupDragAndDrop();
             
-            // Initialize resize UI visibility
-            if (RbResizePercent != null && RbResizePercent.IsChecked == true)
-            {
-                if (PanelPercentSize != null) PanelPercentSize.Visibility = Visibility.Visible;
-                if (PanelPixelSize != null) PanelPixelSize.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                if (PanelPercentSize != null) PanelPercentSize.Visibility = Visibility.Collapsed;
-                if (PanelPixelSize != null) PanelPixelSize.Visibility = Visibility.Visible;
-            }
+            // Attach event handlers after InitializeComponent
+            RbResizePercent.Checked += RbResizeMode_Changed;
+            RbResizePercent.Unchecked += RbResizeMode_Changed;
+            RbResizePixel.Checked += RbResizeMode_Changed;
+            RbResizePixel.Unchecked += RbResizeMode_Changed;
             
-            // Update theme after window is loaded
+            // Initialize resize UI visibility after all controls are loaded
             this.Loaded += (s, e) => 
             {
                 try
                 {
+                    // Initialize resize UI visibility
+                    if (RbResizePercent.IsChecked == true)
+                    {
+                        PanelPercentSize.Visibility = Visibility.Visible;
+                        PanelPixelSize.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        PanelPercentSize.Visibility = Visibility.Collapsed;
+                        PanelPixelSize.Visibility = Visibility.Visible;
+                    }
+                    
                     UpdateTheme();
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Theme update error: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Load error: {ex.Message}");
                 }
             };
         }
@@ -214,6 +220,9 @@ public partial class MainWindow : Window
     // ============================================
     private void RbResizeMode_Changed(object sender, RoutedEventArgs e)
     {
+        // Only update if controls are initialized
+        if (PanelPercentSize == null || PanelPixelSize == null) return;
+        
         if (RbResizePercent.IsChecked == true)
         {
             PanelPercentSize.Visibility = Visibility.Visible;
