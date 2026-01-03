@@ -250,10 +250,10 @@ public partial class MainWindow : Window
     {
         if (ImgEdited != null && _currentImage != null)
         {
-            // Apply zoom using ScaleTransform
+            // Apply zoom using ScaleTransform, anchored to top-left corner
             ScaleTransform scaleTransform = new(_zoomLevel, _zoomLevel);
             ImgEdited.RenderTransform = scaleTransform;
-            ImgEdited.RenderTransformOrigin = new Point(0.5, 0.5);
+            ImgEdited.RenderTransformOrigin = new Point(0, 0); // Anchor to top-left corner
         }
     }
     
