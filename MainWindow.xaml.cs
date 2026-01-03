@@ -208,7 +208,7 @@ public partial class MainWindow : Window
             ImgEdited.Source = _currentImage;
             
             // Canvas will size itself based on the image's displayed size
-            // We'll update it when the image is loaded
+            // We'll update it when the image is loaded and when window size changes
             if (!ImgEdited.IsLoaded)
             {
                 ImgEdited.Loaded += (s, e) =>
@@ -220,6 +220,15 @@ public partial class MainWindow : Window
             {
                 UpdateCanvasSize();
             }
+            
+            // Also update when window size changes
+            this.SizeChanged += (s, e) =>
+            {
+                if (_currentImage != null)
+                {
+                    UpdateCanvasSize();
+                }
+            };
         }
     }
     
@@ -229,6 +238,18 @@ public partial class MainWindow : Window
         {
             CanvasEdited.Width = ImgEdited.ActualWidth;
             CanvasEdited.Height = ImgEdited.ActualHeight;
+        }
+        else
+        {
+            // If image hasn't rendered yet, use a delayed update
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
+                {
+                    CanvasEdited.Width = ImgEdited.ActualWidth;
+                    CanvasEdited.Height = ImgEdited.ActualHeight;
+                }
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
     }
     
