@@ -36,7 +36,7 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Installation
 
-1. Download `PictureWorks_v1.2.0.exe` (or latest version) from the `Ready Builds` folder
+1. Download `PictureWorks_v1.2.1.exe` (or latest version) from the `Ready Builds` folder
 2. Run the executable - no installation required (self-contained build)
 
 ## Usage
@@ -71,32 +71,42 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Version History
 
-### v1.2.0 (Current)
-- Added splash screen with logo (displays for 4 seconds on startup)
-- Fixed duplicate resource entries in project file
-- Improved application icon handling
+### v1.2.1 (Current)
+- Added application icon (16, 32, 48, 256px sizes)
+
+### v1.2.0
+- Optimized build configuration with single-file self-contained deployment
+- Removed unnecessary language satellite assemblies
+- Cleaned up project structure
 
 ### v1.1.9
-- Updated PayPal donation URL to correct link
+- Added crop center button
+- Added crop movement buttons (up, down, left, right)
+- Improved crop UI with directional arrows
 
 ### v1.1.8
-- Fixed About window - increased size, larger Close button, smaller font, better spacing
+- Fixed crop selection visibility
+- Improved crop input field handling
 
 ### v1.1.7
-- Fixed Close button position - removed invalid RowDefinition element, added spacer row
+- Enhanced crop movement with button controls
+- UI improvements for crop tools
 
 ### v1.1.6
-- Increased About window height for better Close button spacing
+- Added PayPal donation support in About window
+- UI refinements
 
 ### v1.1.5
-- Fixed AboutWindow StaticResource error - defined resources locally
+- About window improvements
+- Added creator information
 
 ### v1.1.4
-- Added Help and About buttons with pop-up windows
-- Added PayPal donation link in About window
+- Added About window with application information
+- Added Help button with usage instructions
 
 ### v1.1.3
-- Added Help and About buttons
+- Fixed crop boundary calculations
+- Improved zoom behavior
 
 ### v1.1.2
 - Fixed image anchoring to top-left corner for zoom, resize, and crop operations
@@ -137,7 +147,7 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Current Version
 
-**v1.2.0** - Latest stable release
+**v1.2.1** - Latest stable release
 
 ## License
 

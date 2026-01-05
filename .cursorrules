@@ -81,4 +81,17 @@ When creating new changes:
 - **Build to whatever the project requires** - adapt to the specific project type
 
 ## PictureWorks Specific Rules
-<!-- Add project-specific rules here as the project develops -->
+
+**CRITICAL - Build Command:**
+```bash
+dotnet publish -c Release
+```
+This automatically:
+- Builds a self-contained single-file executable (~68 MB)
+- Copies to `Ready Builds\PictureWorks_v{version}.exe`
+- No .NET installation required on target machine
+
+**Version locations to update:**
+1. `PictureWorks.csproj` - lines 9-11 (Version, AssemblyVersion, FileVersion)
+2. `MainWindow.xaml` - line 8 (Title)
+3. `AboutWindow.xaml` - line 54 (TextBlock)

@@ -2,19 +2,25 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
-    <ApplicationIcon />
+    <Version>1.2.1</Version>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>
+    <FileVersion>1.2.1.0</FileVersion>
+    <ApplicationIcon>PW_Icon.ico</ApplicationIcon>
+    
+    <!-- Self-contained single-file configuration -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   
   <ItemGroup>
     <Resource Include="PayPal_Logo_Alternative_1.png" />
-    <Resource Include="PW_Icon.png" />
   </ItemGroup>
   
   <ItemGroup>
@@ -23,17 +29,17 @@
     </Page>
   </ItemGroup>
 
-  <!-- Auto-copy executable to Ready Builds folder with version number -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <!-- Auto-copy published executable to Ready Builds folder with version number -->
+  <Target Name="CopyPublishedFile" AfterTargets="Publish">
     <PropertyGroup>
-      <ReadyBuildsPath>$(ProjectDir)Ready Builds\</ReadyBuildsPath>
+      <ReadyBuildsPath>C:\Users\soruu\Documents\GitHub\PictureWorks\Ready Builds\</ReadyBuildsPath>
       <VersionNumber>$(Version)</VersionNumber>
       <OutputFileName>PictureWorks_v$(VersionNumber).exe</OutputFileName>
-      <ExePath>$(TargetDir)$(TargetName).exe</ExePath>
+      <PublishedExePath>$(PublishDir)$(TargetName).exe</PublishedExePath>
     </PropertyGroup>
     <MakeDir Directories="$(ReadyBuildsPath)" Condition="!Exists('$(ReadyBuildsPath)')" />
-    <Copy SourceFiles="$(ExePath)" DestinationFiles="$(ReadyBuildsPath)$(OutputFileName)" SkipUnchangedFiles="false" />
-    <Message Text="Copied $(TargetName).exe to Ready Builds as $(OutputFileName)" Importance="high" />
+    <Copy SourceFiles="$(PublishedExePath)" DestinationFiles="$(ReadyBuildsPath)$(OutputFileName)" SkipUnchangedFiles="false" />
+    <Message Text="Copied published $(TargetName).exe to Ready Builds as $(OutputFileName)" Importance="high" />
   </Target>
 
 </Project>
