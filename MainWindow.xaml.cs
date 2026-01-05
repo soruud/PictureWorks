@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     private BitmapImage? _originalImage;
     private BitmapImage? _currentImage;
     private string? _currentImagePath;
-    private bool _isDarkMode = false;
+    private bool _isDarkMode = true;
     
     // ============================================
     // Undo/Redo System
