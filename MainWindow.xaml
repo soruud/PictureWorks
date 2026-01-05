@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PictureWorks"
         mc:Ignorable="d"
-        Title="PictureWorks v1.2.3" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
+        Title="PictureWorks v2.0.4" Height="1080" Width="1920" MinHeight="600" MinWidth="1000"
         AllowDrop="True"
         Background="{DynamicResource WindowBackground}">
     <Window.Resources>
@@ -51,16 +51,26 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        
+        <!-- Slider Style for Dark Mode compatibility -->
+        <Style x:Key="ModernSlider" TargetType="Slider">
+            <Setter Property="Minimum" Value="-100"/>
+            <Setter Property="Maximum" Value="100"/>
+            <Setter Property="Value" Value="0"/>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <!-- Toolbar -->
+        <!-- Toolbar Row 1 - File, Resize, Rotate, Crop -->
         <Border Grid.Row="0" Background="{DynamicResource PanelBackground}" 
                 BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="10">
             <StackPanel Orientation="Horizontal">
@@ -98,10 +108,28 @@
                 
                 <Separator Margin="10,0"/>
                 
+                <TextBlock Text="Flip:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Button x:Name="BtnFlipH" Style="{StaticResource ModernButton}" Click="BtnFlipH_Click" IsEnabled="False" Width="40" ToolTip="Flip horizontal">
+                    <TextBlock Text="↔" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                <Button x:Name="BtnFlipV" Style="{StaticResource ModernButton}" Click="BtnFlipV_Click" IsEnabled="False" Width="40" ToolTip="Flip vertical">
+                    <TextBlock Text="↕" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
+                
+                <Separator Margin="10,0"/>
+                
                 <TextBlock Text="Crop:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
-                <TextBlock Text="Width:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <ComboBox x:Name="CbAspectRatio" Width="80" Margin="5,0" VerticalAlignment="Center" SelectedIndex="0" SelectionChanged="CbAspectRatio_SelectionChanged">
+                    <ComboBoxItem Content="Free"/>
+                    <ComboBoxItem Content="16:9"/>
+                    <ComboBoxItem Content="4:3"/>
+                    <ComboBoxItem Content="1:1"/>
+                    <ComboBoxItem Content="3:2"/>
+                    <ComboBoxItem Content="2:3"/>
+                    <ComboBoxItem Content="9:16"/>
+                </ComboBox>
                 <TextBox x:Name="TxtCropWidth" Width="60" Margin="2,0" VerticalAlignment="Center" Text="425" KeyDown="TxtCropWidth_KeyDown"/>
-                <TextBlock Text="Height:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <TextBlock Text="x" VerticalAlignment="Center" Margin="2,0" Foreground="{DynamicResource TextColor}"/>
                 <TextBox x:Name="TxtCropHeight" Width="60" Margin="2,0" VerticalAlignment="Center" Text="300" KeyDown="TxtCropHeight_KeyDown"/>
                 <Button x:Name="BtnCropMoveUp" Style="{StaticResource ModernButton}" Click="BtnCropMoveUp_Click" IsEnabled="False" Width="40" ToolTip="Move crop up">
                     <TextBlock Text="↑" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Segoe UI Symbol"/>
@@ -119,11 +147,47 @@
                     <TextBlock Text="⦿" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="Segoe UI Symbol"/>
                 </Button>
                 <Button x:Name="BtnCrop" Content="Apply Crop" Style="{StaticResource ModernButton}" Click="BtnCrop_Click" IsEnabled="False"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Toolbar Row 2 - Undo/Redo, Effects, Filters, Remove BG, Settings -->
+        <Border Grid.Row="1" Background="{DynamicResource PanelBackground}" 
+                BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,0,0,1" Padding="10">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="BtnUndo" Content="Undo" Style="{StaticResource ModernButton}" Click="BtnUndo_Click" IsEnabled="False"/>
+                <Button x:Name="BtnRedo" Content="Redo" Style="{StaticResource ModernButton}" Click="BtnRedo_Click" IsEnabled="False"/>
                 
                 <Separator Margin="10,0"/>
                 
-                <Button x:Name="BtnUndo" Content="Undo" Style="{StaticResource ModernButton}" Click="BtnUndo_Click" IsEnabled="False"/>
-                <Button x:Name="BtnRedo" Content="Redo" Style="{StaticResource ModernButton}" Click="BtnRedo_Click" IsEnabled="False"/>
+                <TextBlock Text="Brightness:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Slider x:Name="SliderBrightness" Style="{StaticResource ModernSlider}" ValueChanged="SliderBrightness_ValueChanged" PreviewMouseWheel="Slider_PreviewMouseWheel"/>
+                <TextBlock x:Name="TxtBrightnessValue" Text="0" Width="30" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                
+                <TextBlock Text="Contrast:" VerticalAlignment="Center" Margin="10,0,5,0" Foreground="{DynamicResource TextColor}"/>
+                <Slider x:Name="SliderContrast" Style="{StaticResource ModernSlider}" ValueChanged="SliderContrast_ValueChanged" PreviewMouseWheel="Slider_PreviewMouseWheel"/>
+                <TextBlock x:Name="TxtContrastValue" Text="0" Width="30" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                
+                <Button x:Name="BtnResetAdjustments" Content="Reset" Style="{StaticResource ModernButton}" Click="BtnResetAdjustments_Click" IsEnabled="False" ToolTip="Reset sliders to original"/>
+                
+                <Separator Margin="10,0"/>
+                
+                <TextBlock Text="Filters:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Button x:Name="BtnGrayscale" Content="Grayscale" Style="{StaticResource ModernButton}" Click="BtnGrayscale_Click" IsEnabled="False"/>
+                <Button x:Name="BtnSepia" Content="Sepia" Style="{StaticResource ModernButton}" Click="BtnSepia_Click" IsEnabled="False"/>
+                
+                <Separator Margin="10,0"/>
+                
+                <TextBlock Text="Remove BG:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Button x:Name="BtnPickColor" Content="Pick Color" Style="{StaticResource ModernButton}" Click="BtnPickColor_Click" IsEnabled="False" ToolTip="Click on image to select color to remove"/>
+                <Border x:Name="ColorPreviewBorder" Width="24" Height="24" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="5,0" CornerRadius="3" ToolTip="Selected color to remove">
+                    <Border.Background>
+                        <SolidColorBrush x:Name="ColorPreviewBrush" Color="White"/>
+                    </Border.Background>
+                </Border>
+                <TextBlock Text="Tolerance:" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Slider x:Name="SliderTolerance" Minimum="0" Maximum="100" Value="30" Width="80" VerticalAlignment="Center" ValueChanged="SliderTolerance_ValueChanged"/>
+                <TextBlock x:Name="TxtToleranceValue" Text="30" Width="25" VerticalAlignment="Center" Margin="5,0" Foreground="{DynamicResource TextColor}"/>
+                <Button x:Name="BtnRemoveBG" Content="Remove" Style="{StaticResource ModernButton}" Click="BtnRemoveBG_Click" IsEnabled="False" ToolTip="Remove selected color from background"/>
                 
                 <Separator Margin="10,0"/>
                 
@@ -132,12 +196,12 @@
                 
                 <Separator Margin="10,0"/>
                 
-                <Button x:Name="BtnDarkMode" Content="Dark Mode" Style="{StaticResource ModernButton}" Click="BtnDarkMode_Click"/>
+                <Button x:Name="BtnDarkMode" Content="Light Mode" Style="{StaticResource ModernButton}" Click="BtnDarkMode_Click"/>
             </StackPanel>
         </Border>
         
         <!-- Main Content Area - Single Image Preview -->
-        <Border Grid.Row="1" Margin="10" Background="{DynamicResource PanelBackground}" 
+        <Border Grid.Row="2" Margin="10" Background="{DynamicResource PanelBackground}" 
                 BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" CornerRadius="4">
             <Grid>
                 <Grid.RowDefinitions>
@@ -163,9 +227,9 @@
         </Border>
         
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{DynamicResource PanelBackground}" 
+        <Border Grid.Row="3" Background="{DynamicResource PanelBackground}" 
                 BorderBrush="{DynamicResource BorderColor}" BorderThickness="0,1,0,0" Padding="10,5">
-            <TextBlock x:Name="TxtStatus" Text="Ready - Drop an image or use File → Open" 
+            <TextBlock x:Name="TxtStatus" Text="Ready - Drop an image or use File → Open (Ctrl+V to paste from clipboard)" 
                       Foreground="{DynamicResource TextColor}"/>
         </Border>
     </Grid>

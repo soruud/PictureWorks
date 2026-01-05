@@ -11,8 +11,9 @@ using Microsoft.Win32;
 namespace PictureWorks;
 
 /// <summary>
-/// MainWindow - PictureWorks Image Editor
-/// Provides functionality to resize, crop, rotate, and convert images
+/// MainWindow - PictureWorks Image Editor v2.0.4
+/// Provides functionality to resize, crop, rotate, flip, adjust brightness/contrast,
+/// apply filters, remove backgrounds, and convert images
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -48,6 +49,12 @@ public partial class MainWindow : Window
     private const double ZOOM_STEP = 0.1;
     
     // ============================================
+    // Background Removal Variables
+    // ============================================
+    private bool _isPickingColor = false;
+    private Color _selectedColorToRemove = Colors.White;
+    
+    // ============================================
     // Constructor
     // ============================================
     public MainWindow()
@@ -66,21 +73,23 @@ public partial class MainWindow : Window
         try
         {
             SetupDragAndDrop();
+            SetupKeyboardShortcuts();
             
-            // Attach event handlers after InitializeComponent (to avoid null reference during XAML parsing)
+            // Attach event handlers after InitializeComponent
             RbResizePercent.Checked += RbResizeMode_Changed;
             RbResizePercent.Unchecked += RbResizeMode_Changed;
             RbResizePixel.Checked += RbResizeMode_Changed;
             RbResizePixel.Unchecked += RbResizeMode_Changed;
-            
-            // Attach TextChanged handler after InitializeComponent
             TxtResizeWidth.TextChanged += TxtResizeWidth_TextChanged;
+            
+            // Slider value changed handlers
+            SliderTolerance.ValueChanged += (s, e) => TxtToleranceValue.Text = ((int)SliderTolerance.Value).ToString();
             
             // Attach keyboard event handler for arrow keys
             this.KeyDown += MainWindow_KeyDown;
             this.Focusable = true;
             
-            // Initialize resize UI visibility after all controls are loaded
+            // Initialize UI after all controls are loaded
             this.Loaded += (s, e) => 
             {
                 try
@@ -109,6 +118,90 @@ public partial class MainWindow : Window
         {
             MessageBox.Show($"Error setting up window:\n\n{ex.Message}\n\n{ex.StackTrace}", 
                 "Setup Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+    
+    // ============================================
+    // Keyboard Shortcuts Setup
+    // ============================================
+    private void SetupKeyboardShortcuts()
+    {
+        // Ctrl+V to paste, Ctrl+C to copy
+        this.PreviewKeyDown += (s, e) =>
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (e.Key == Key.V)
+                {
+                    PasteFromClipboard();
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.C && _currentImage != null)
+                {
+                    CopyToClipboard();
+                    e.Handled = true;
+                }
+            }
+        };
+    }
+    
+    // ============================================
+    // Clipboard Functions
+    // ============================================
+    private void PasteFromClipboard()
+    {
+        try
+        {
+            if (Clipboard.ContainsImage())
+            {
+                BitmapSource clipboardImage = Clipboard.GetImage();
+                if (clipboardImage != null)
+                {
+                    // Convert to BitmapImage
+                    _currentImage = ConvertBitmapSourceToBitmapImage(clipboardImage);
+                    _currentImage.Freeze();
+                    _originalImage = CloneBitmapImage(_currentImage);
+                    
+                    // Reset zoom and stacks
+                    _zoomLevel = 1.0;
+                    _undoStack.Clear();
+                    _redoStack.Clear();
+                    
+                    // Update UI
+                    UpdateImageDisplay();
+                    EnableImageOperations(true);
+                    
+                    // Update crop size
+                    TxtCropWidth.Text = _currentImage.PixelWidth.ToString();
+                    TxtCropHeight.Text = _currentImage.PixelHeight.ToString();
+                    
+                    UpdateStatus($"Pasted from clipboard ({_currentImage.PixelWidth}x{_currentImage.PixelHeight})");
+                }
+            }
+            else
+            {
+                UpdateStatus("No image in clipboard");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error pasting from clipboard: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+    
+    private void CopyToClipboard()
+    {
+        try
+        {
+            if (_currentImage != null)
+            {
+                Clipboard.SetImage(_currentImage);
+                UpdateStatus("Copied to clipboard");
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error copying to clipboard: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     
@@ -217,28 +310,18 @@ public partial class MainWindow : Window
         if (_currentImage != null)
         {
             ImgEdited.Source = _currentImage;
-            
-            // Reset transform to ensure image starts at top-left
             ImgEdited.RenderTransform = null;
-            
-            // Apply zoom level (will set RenderTransformOrigin to top-left)
             ApplyZoom();
             
-            // Canvas will size itself based on the image's displayed size
-            // We'll update it when the image is loaded and when window size changes
             if (!ImgEdited.IsLoaded)
             {
-                ImgEdited.Loaded += (s, e) =>
-                {
-                    UpdateCanvasSize();
-                };
+                ImgEdited.Loaded += (s, e) => UpdateCanvasSize();
             }
             else
             {
                 UpdateCanvasSize();
             }
             
-            // Also update when window size changes
             this.SizeChanged += (s, e) =>
             {
                 if (_currentImage != null)
@@ -253,10 +336,9 @@ public partial class MainWindow : Window
     {
         if (ImgEdited != null && _currentImage != null)
         {
-            // Apply zoom using ScaleTransform, anchored to top-left corner
             ScaleTransform scaleTransform = new(_zoomLevel, _zoomLevel);
             ImgEdited.RenderTransform = scaleTransform;
-            ImgEdited.RenderTransformOrigin = new Point(0, 0); // Anchor to top-left corner
+            ImgEdited.RenderTransformOrigin = new Point(0, 0);
         }
     }
     
@@ -264,13 +346,11 @@ public partial class MainWindow : Window
     {
         if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
         {
-            // Account for zoom level
             CanvasEdited.Width = ImgEdited.ActualWidth * _zoomLevel;
             CanvasEdited.Height = ImgEdited.ActualHeight * _zoomLevel;
         }
         else
         {
-            // If image hasn't rendered yet, use a delayed update
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (ImgEdited.ActualWidth > 0 && ImgEdited.ActualHeight > 0)
@@ -289,22 +369,13 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null) return;
         
-        // Determine zoom direction
         if (e.Delta > 0)
-        {
-            // Zoom in
             _zoomLevel = Math.Min(MAX_ZOOM, _zoomLevel + ZOOM_STEP);
-        }
         else
-        {
-            // Zoom out
             _zoomLevel = Math.Max(MIN_ZOOM, _zoomLevel - ZOOM_STEP);
-        }
         
         ApplyZoom();
         UpdateCanvasSize();
-        
-        // Prevent ScrollViewer from scrolling
         e.Handled = true;
     }
     
@@ -314,12 +385,435 @@ public partial class MainWindow : Window
         BtnResize.IsEnabled = enable;
         BtnRotateLeft.IsEnabled = enable;
         BtnRotateRight.IsEnabled = enable;
+        BtnFlipH.IsEnabled = enable;
+        BtnFlipV.IsEnabled = enable;
         BtnCrop.IsEnabled = enable;
         BtnCropMoveUp.IsEnabled = enable;
         BtnCropMoveDown.IsEnabled = enable;
         BtnCropMoveLeft.IsEnabled = enable;
         BtnCropMoveRight.IsEnabled = enable;
         BtnCropCenter.IsEnabled = enable;
+        BtnGrayscale.IsEnabled = enable;
+        BtnSepia.IsEnabled = enable;
+        BtnResetAdjustments.IsEnabled = enable;
+        BtnPickColor.IsEnabled = enable;
+        BtnRemoveBG.IsEnabled = enable;
+    }
+    
+    // ============================================
+    // Flip Functions
+    // ============================================
+    private void BtnFlipH_Click(object sender, RoutedEventArgs e)
+    {
+        FlipImage(true);
+    }
+    
+    private void BtnFlipV_Click(object sender, RoutedEventArgs e)
+    {
+        FlipImage(false);
+    }
+    
+    private void FlipImage(bool horizontal)
+    {
+        if (_currentImage == null) return;
+        
+        SaveToUndoStack();
+        
+        ScaleTransform flipTransform = horizontal 
+            ? new ScaleTransform(-1, 1, _currentImage.PixelWidth / 2.0, 0)
+            : new ScaleTransform(1, -1, 0, _currentImage.PixelHeight / 2.0);
+        
+        TransformedBitmap flipped = new(_currentImage, flipTransform);
+        BitmapImage result = ConvertBitmapSourceToBitmapImage(flipped);
+        result.Freeze();
+        
+        _currentImage = result;
+        UpdateImageDisplay();
+        ClearRedoStack();
+        UpdateStatus($"Flipped {(horizontal ? "horizontally" : "vertically")}");
+    }
+    
+    // ============================================
+    // Brightness/Contrast Functions (Live Preview)
+    // ============================================
+    private BitmapImage? _imageBeforeAdjustments;
+    private bool _isAdjusting = false;
+    
+    private void Slider_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (sender is Slider slider)
+        {
+            double change = e.Delta > 0 ? 5 : -5;
+            slider.Value = Math.Max(slider.Minimum, Math.Min(slider.Maximum, slider.Value + change));
+            e.Handled = true;
+        }
+    }
+    
+    private void SliderBrightness_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TxtBrightnessValue != null)
+            TxtBrightnessValue.Text = ((int)SliderBrightness.Value).ToString();
+        
+        ApplyLiveAdjustments();
+    }
+    
+    private void SliderContrast_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TxtContrastValue != null)
+            TxtContrastValue.Text = ((int)SliderContrast.Value).ToString();
+        
+        ApplyLiveAdjustments();
+    }
+    
+    private void ApplyLiveAdjustments()
+    {
+        if (_currentImage == null || _isAdjusting) return;
+        if (SliderBrightness == null || SliderContrast == null) return;
+        
+        // Store original image before first adjustment
+        if (_imageBeforeAdjustments == null)
+        {
+            _imageBeforeAdjustments = CloneBitmapImage(_currentImage);
+            SaveToUndoStack();
+        }
+        
+        double brightness = SliderBrightness.Value / 100.0;
+        double contrast = (SliderContrast.Value + 100) / 100.0;
+        
+        // Apply adjustments from original
+        _isAdjusting = true;
+        ApplyBrightnessContrastFromSource(_imageBeforeAdjustments, brightness, contrast);
+        _isAdjusting = false;
+    }
+    
+    private void BtnResetAdjustments_Click(object sender, RoutedEventArgs e)
+    {
+        if (_imageBeforeAdjustments != null)
+        {
+            _currentImage = CloneBitmapImage(_imageBeforeAdjustments);
+            _currentImage.Freeze();
+            UpdateImageDisplay();
+            _imageBeforeAdjustments = null;
+        }
+        
+        _isAdjusting = true;
+        SliderBrightness.Value = 0;
+        SliderContrast.Value = 0;
+        _isAdjusting = false;
+        
+        ClearRedoStack();
+        UpdateStatus("Adjustments reset");
+    }
+    
+    private void ApplyBrightnessContrastFromSource(BitmapImage source, double brightness, double contrast)
+    {
+        if (source == null) return;
+        
+        WriteableBitmap writeable = new(source);
+        writeable.Lock();
+        
+        int width = writeable.PixelWidth;
+        int height = writeable.PixelHeight;
+        int stride = writeable.BackBufferStride;
+        
+        unsafe
+        {
+            byte* buffer = (byte*)writeable.BackBuffer;
+            
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int index = y * stride + x * 4;
+                    
+                    for (int c = 0; c < 3; c++)
+                    {
+                        double value = buffer[index + c] / 255.0;
+                        value = (value - 0.5) * contrast + 0.5;
+                        value += brightness;
+                        value = Math.Max(0, Math.Min(1, value));
+                        buffer[index + c] = (byte)(value * 255);
+                    }
+                }
+            }
+        }
+        
+        writeable.AddDirtyRect(new Int32Rect(0, 0, width, height));
+        writeable.Unlock();
+        
+        _currentImage = ConvertBitmapSourceToBitmapImage(writeable);
+        _currentImage.Freeze();
+        UpdateImageDisplay();
+    }
+    
+    
+    // ============================================
+    // Filter Functions (Grayscale, Sepia) - Toggle On/Off
+    // ============================================
+    private BitmapImage? _imageBeforeFilter;
+    private bool _isGrayscaleOn = false;
+    private bool _isSepiaOn = false;
+    
+    private void BtnGrayscale_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentImage == null) return;
+        
+        if (_isGrayscaleOn)
+        {
+            // Turn off - restore original
+            if (_imageBeforeFilter != null)
+            {
+                _currentImage = CloneBitmapImage(_imageBeforeFilter);
+                _currentImage.Freeze();
+                UpdateImageDisplay();
+                _imageBeforeFilter = null;
+            }
+            _isGrayscaleOn = false;
+            BtnGrayscale.Content = "Grayscale";
+            UpdateStatus("Grayscale filter removed");
+        }
+        else
+        {
+            // Turn off sepia first if on
+            if (_isSepiaOn)
+            {
+                _isSepiaOn = false;
+                BtnSepia.Content = "Sepia";
+            }
+            
+            // Store original and apply
+            if (_imageBeforeFilter == null)
+            {
+                _imageBeforeFilter = CloneBitmapImage(_currentImage);
+                SaveToUndoStack();
+            }
+            
+            ApplyGrayscale();
+            _isGrayscaleOn = true;
+            BtnGrayscale.Content = "Grayscale ✓";
+            ClearRedoStack();
+            UpdateStatus("Grayscale filter applied (click again to remove)");
+        }
+    }
+    
+    private void BtnSepia_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentImage == null) return;
+        
+        if (_isSepiaOn)
+        {
+            // Turn off - restore original
+            if (_imageBeforeFilter != null)
+            {
+                _currentImage = CloneBitmapImage(_imageBeforeFilter);
+                _currentImage.Freeze();
+                UpdateImageDisplay();
+                _imageBeforeFilter = null;
+            }
+            _isSepiaOn = false;
+            BtnSepia.Content = "Sepia";
+            UpdateStatus("Sepia filter removed");
+        }
+        else
+        {
+            // Turn off grayscale first if on
+            if (_isGrayscaleOn)
+            {
+                _isGrayscaleOn = false;
+                BtnGrayscale.Content = "Grayscale";
+            }
+            
+            // Store original and apply
+            if (_imageBeforeFilter == null)
+            {
+                _imageBeforeFilter = CloneBitmapImage(_currentImage);
+                SaveToUndoStack();
+            }
+            
+            ApplySepia();
+            _isSepiaOn = true;
+            BtnSepia.Content = "Sepia ✓";
+            ClearRedoStack();
+            UpdateStatus("Sepia filter applied (click again to remove)");
+        }
+    }
+    
+    private void ApplyGrayscale()
+    {
+        if (_imageBeforeFilter == null) return;
+        
+        FormatConvertedBitmap grayscale = new();
+        grayscale.BeginInit();
+        grayscale.Source = _imageBeforeFilter;
+        grayscale.DestinationFormat = PixelFormats.Gray32Float;
+        grayscale.EndInit();
+        
+        FormatConvertedBitmap bgra = new();
+        bgra.BeginInit();
+        bgra.Source = grayscale;
+        bgra.DestinationFormat = PixelFormats.Bgra32;
+        bgra.EndInit();
+        
+        _currentImage = ConvertBitmapSourceToBitmapImage(bgra);
+        _currentImage.Freeze();
+        UpdateImageDisplay();
+    }
+    
+    private void ApplySepia()
+    {
+        if (_imageBeforeFilter == null) return;
+        
+        WriteableBitmap writeable = new(_imageBeforeFilter);
+        writeable.Lock();
+        
+        int width = writeable.PixelWidth;
+        int height = writeable.PixelHeight;
+        int stride = writeable.BackBufferStride;
+        
+        unsafe
+        {
+            byte* buffer = (byte*)writeable.BackBuffer;
+            
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int index = y * stride + x * 4;
+                    
+                    byte b = buffer[index];
+                    byte g = buffer[index + 1];
+                    byte r = buffer[index + 2];
+                    
+                    int newR = (int)(r * 0.393 + g * 0.769 + b * 0.189);
+                    int newG = (int)(r * 0.349 + g * 0.686 + b * 0.168);
+                    int newB = (int)(r * 0.272 + g * 0.534 + b * 0.131);
+                    
+                    buffer[index] = (byte)Math.Min(255, newB);
+                    buffer[index + 1] = (byte)Math.Min(255, newG);
+                    buffer[index + 2] = (byte)Math.Min(255, newR);
+                }
+            }
+        }
+        
+        writeable.AddDirtyRect(new Int32Rect(0, 0, width, height));
+        writeable.Unlock();
+        
+        _currentImage = ConvertBitmapSourceToBitmapImage(writeable);
+        _currentImage.Freeze();
+        UpdateImageDisplay();
+    }
+    
+    // ============================================
+    // Background Removal Functions
+    // ============================================
+    private void BtnPickColor_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentImage == null) return;
+        
+        _isPickingColor = true;
+        UpdateStatus("Click on the image to select a color to remove");
+        this.Cursor = Cursors.Cross;
+    }
+    
+    private void BtnRemoveBG_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentImage == null) return;
+        
+        SaveToUndoStack();
+        RemoveBackgroundColor(_selectedColorToRemove, (int)SliderTolerance.Value);
+        ClearRedoStack();
+        UpdateStatus($"Removed background color (tolerance: {(int)SliderTolerance.Value})");
+    }
+    
+    private void RemoveBackgroundColor(Color colorToRemove, int tolerance)
+    {
+        if (_currentImage == null) return;
+        
+        // First convert to BGRA32 format to ensure we have an alpha channel
+        FormatConvertedBitmap formattedSource = new();
+        formattedSource.BeginInit();
+        formattedSource.Source = _currentImage;
+        formattedSource.DestinationFormat = PixelFormats.Bgra32;
+        formattedSource.EndInit();
+        
+        // Create WriteableBitmap from the BGRA32 source
+        WriteableBitmap writeable = new(formattedSource);
+        writeable.Lock();
+        
+        int width = writeable.PixelWidth;
+        int height = writeable.PixelHeight;
+        int stride = writeable.BackBufferStride;
+        int pixelsChanged = 0;
+        
+        unsafe
+        {
+            byte* buffer = (byte*)writeable.BackBuffer;
+            
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int index = y * stride + x * 4;
+                    
+                    byte b = buffer[index];
+                    byte g = buffer[index + 1];
+                    byte r = buffer[index + 2];
+                    
+                    // Calculate color distance
+                    int distance = Math.Abs(r - colorToRemove.R) + 
+                                   Math.Abs(g - colorToRemove.G) + 
+                                   Math.Abs(b - colorToRemove.B);
+                    
+                    // If within tolerance, make transparent
+                    if (distance <= tolerance * 3) // tolerance * 3 because we sum 3 channels
+                    {
+                        buffer[index + 3] = 0; // Set alpha to 0 (transparent)
+                        pixelsChanged++;
+                    }
+                }
+            }
+        }
+        
+        writeable.AddDirtyRect(new Int32Rect(0, 0, width, height));
+        writeable.Unlock();
+        
+        _currentImage = ConvertBitmapSourceToBitmapImage(writeable);
+        _currentImage.Freeze();
+        UpdateImageDisplay();
+        
+        UpdateStatus($"Removed {pixelsChanged:N0} pixels (tolerance: {tolerance})");
+    }
+    
+    // ============================================
+    // Aspect Ratio Functions
+    // ============================================
+    private void CbAspectRatio_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_currentImage == null || CbAspectRatio.SelectedItem == null) return;
+        
+        string selected = ((ComboBoxItem)CbAspectRatio.SelectedItem).Content.ToString() ?? "Free";
+        
+        if (selected == "Free") return;
+        
+        // Parse aspect ratio
+        double aspectRatio = selected switch
+        {
+            "16:9" => 16.0 / 9.0,
+            "4:3" => 4.0 / 3.0,
+            "1:1" => 1.0,
+            "3:2" => 3.0 / 2.0,
+            "2:3" => 2.0 / 3.0,
+            "9:16" => 9.0 / 16.0,
+            _ => 1.0
+        };
+        
+        // Calculate new crop dimensions maintaining aspect ratio
+        if (int.TryParse(TxtCropWidth.Text, out int width))
+        {
+            int newHeight = (int)(width / aspectRatio);
+            TxtCropHeight.Text = newHeight.ToString();
+            SetCropSizeFromInput();
+        }
     }
     
     // ============================================
@@ -327,7 +821,6 @@ public partial class MainWindow : Window
     // ============================================
     private void RbResizeMode_Changed(object sender, RoutedEventArgs e)
     {
-        // Only update if controls are initialized
         if (PanelPercentSize == null || PanelPixelSize == null) return;
         
         if (RbResizePercent.IsChecked == true)
@@ -342,7 +835,6 @@ public partial class MainWindow : Window
         }
     }
     
-    
     private void BtnResize_Click(object sender, RoutedEventArgs e)
     {
         if (_currentImage == null) return;
@@ -353,7 +845,6 @@ public partial class MainWindow : Window
             
             if (RbResizePercent.IsChecked == true)
             {
-                // Resize by percentage from input field
                 if (!double.TryParse(TxtResizePercent.Text, out double percent) || percent <= 0)
                 {
                     MessageBox.Show("Please enter a valid positive percentage.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -364,7 +855,6 @@ public partial class MainWindow : Window
             }
             else
             {
-                // Resize by pixel - get width and height from text boxes
                 if (!int.TryParse(TxtResizeWidth.Text, out newWidth) || newWidth <= 0)
                 {
                     MessageBox.Show("Please enter a valid positive width.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -373,15 +863,12 @@ public partial class MainWindow : Window
                 
                 if (CbMaintainAspect.IsChecked == true)
                 {
-                    // Calculate height based on aspect ratio from width
                     double aspectRatio = (double)_currentImage.PixelHeight / _currentImage.PixelWidth;
                     newHeight = (int)(newWidth * aspectRatio);
-                    // Update height text box
                     TxtResizeHeight.Text = newHeight.ToString();
                 }
                 else
                 {
-                    // Get height from text box
                     if (!int.TryParse(TxtResizeHeight.Text, out newHeight) || newHeight <= 0)
                     {
                         MessageBox.Show("Please enter a valid positive height.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -401,7 +888,6 @@ public partial class MainWindow : Window
     
     private void TxtResizeWidth_TextChanged(object sender, TextChangedEventArgs e)
     {
-        // Only update if controls are initialized and image is loaded
         if (CbMaintainAspect == null || TxtResizeHeight == null || _currentImage == null) return;
         
         if (CbMaintainAspect.IsChecked == true)
@@ -419,10 +905,8 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null) return;
         
-        // Save to undo stack
         SaveToUndoStack();
         
-        // Use RenderTargetBitmap for better quality resizing
         RenderTargetBitmap renderTarget = new(newWidth, newHeight, 96, 96, PixelFormats.Pbgra32);
         DrawingVisual drawingVisual = new();
         using (DrawingContext drawingContext = drawingVisual.RenderOpen())
@@ -431,7 +915,6 @@ public partial class MainWindow : Window
         }
         renderTarget.Render(drawingVisual);
         
-        // Convert to BitmapImage via encoder
         BitmapImage result = ConvertBitmapSourceToBitmapImage(renderTarget);
         result.Freeze();
         
@@ -479,11 +962,9 @@ public partial class MainWindow : Window
         
         SaveToUndoStack();
         
-        // Create rotation transform centered on image
         RotateTransform rotateTransform = new(angle, _currentImage.PixelWidth / 2.0, _currentImage.PixelHeight / 2.0);
         TransformedBitmap rotated = new(_currentImage, rotateTransform);
         
-        // Convert to BitmapImage
         BitmapImage result = ConvertBitmapSourceToBitmapImage(rotated);
         result.Freeze();
         
@@ -502,6 +983,13 @@ public partial class MainWindow : Window
         
         Point mousePos = e.GetPosition(CanvasEdited);
         
+        // Handle color picking for background removal
+        if (_isPickingColor && e.LeftButton == MouseButtonState.Pressed)
+        {
+            PickColorFromImage(mousePos);
+            return;
+        }
+        
         // Right mouse button: Create new crop selection
         if (e.RightButton == MouseButtonState.Pressed)
         {
@@ -519,7 +1007,6 @@ public partial class MainWindow : Window
         // Left mouse button: Move existing crop selection
         else if (e.LeftButton == MouseButtonState.Pressed && RectCropSelection.Visibility == Visibility.Visible)
         {
-            // Check if click is inside crop rectangle
             double cropX = Canvas.GetLeft(RectCropSelection);
             double cropY = Canvas.GetTop(RectCropSelection);
             if (mousePos.X >= cropX && mousePos.X <= cropX + RectCropSelection.Width &&
@@ -532,13 +1019,78 @@ public partial class MainWindow : Window
         }
     }
     
+    private void PickColorFromImage(Point canvasPos)
+    {
+        if (_currentImage == null) return;
+        
+        try
+        {
+            // Get the position relative to the Image control
+            Point imagePos = new(canvasPos.X / _zoomLevel, canvasPos.Y / _zoomLevel);
+            
+            // Calculate the actual displayed size of the image
+            double displayWidth = ImgEdited.ActualWidth;
+            double displayHeight = ImgEdited.ActualHeight;
+            
+            // If ActualWidth/Height are not ready, use pixel dimensions
+            if (displayWidth <= 0 || displayHeight <= 0)
+            {
+                displayWidth = _currentImage.PixelWidth;
+                displayHeight = _currentImage.PixelHeight;
+            }
+            
+            // Convert to pixel coordinates
+            int imageX = (int)(imagePos.X * _currentImage.PixelWidth / displayWidth);
+            int imageY = (int)(imagePos.Y * _currentImage.PixelHeight / displayHeight);
+            
+            // Ensure within bounds
+            imageX = Math.Max(0, Math.Min(imageX, _currentImage.PixelWidth - 1));
+            imageY = Math.Max(0, Math.Min(imageY, _currentImage.PixelHeight - 1));
+            
+            // Convert to BGRA format for reliable pixel reading
+            FormatConvertedBitmap formattedBitmap = new();
+            formattedBitmap.BeginInit();
+            formattedBitmap.Source = _currentImage;
+            formattedBitmap.DestinationFormat = PixelFormats.Bgra32;
+            formattedBitmap.EndInit();
+            
+            // Read the pixel
+            int stride = formattedBitmap.PixelWidth * 4;
+            byte[] pixelData = new byte[4];
+            formattedBitmap.CopyPixels(new Int32Rect(imageX, imageY, 1, 1), pixelData, 4, 0);
+            
+            // BGRA format: Blue=0, Green=1, Red=2, Alpha=3
+            _selectedColorToRemove = Color.FromArgb(255, pixelData[2], pixelData[1], pixelData[0]);
+            
+            // Update color preview in UI
+            ColorPreviewBrush.Color = _selectedColorToRemove;
+            
+            _isPickingColor = false;
+            this.Cursor = Cursors.Arrow;
+            UpdateStatus($"Selected color: RGB({_selectedColorToRemove.R}, {_selectedColorToRemove.G}, {_selectedColorToRemove.B}) - Adjust tolerance and click 'Remove'");
+        }
+        catch (Exception ex)
+        {
+            _isPickingColor = false;
+            this.Cursor = Cursors.Arrow;
+            UpdateStatus($"Error picking color: {ex.Message}");
+        }
+    }
+    
+    private void SliderTolerance_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TxtToleranceValue != null)
+        {
+            TxtToleranceValue.Text = ((int)e.NewValue).ToString();
+        }
+    }
+    
     private void CanvasEdited_MouseMove(object sender, MouseEventArgs e)
     {
         if (_currentImage == null) return;
         
         Point currentPoint = e.GetPosition(CanvasEdited);
         
-        // Right button drag: Create/resize crop selection
         if (_isCropMode && e.RightButton == MouseButtonState.Pressed && CanvasEdited.IsMouseCaptured)
         {
             double width = currentPoint.X - _cropStartPoint.X;
@@ -557,10 +1109,8 @@ public partial class MainWindow : Window
             else
                 Canvas.SetTop(RectCropSelection, _cropStartPoint.Y);
             
-            // Update input fields in realtime
             UpdateCropInputFields();
         }
-        // Left button drag: Move crop selection
         else if (_isMovingCrop && e.LeftButton == MouseButtonState.Pressed && CanvasEdited.IsMouseCaptured)
         {
             double deltaX = currentPoint.X - _cropMoveStartPoint.X;
@@ -571,7 +1121,6 @@ public partial class MainWindow : Window
             double newX = currentX + deltaX;
             double newY = currentY + deltaY;
             
-            // Ensure crop stays within canvas bounds
             newX = Math.Max(0, Math.Min(newX, CanvasEdited.Width - RectCropSelection.Width));
             newY = Math.Max(0, Math.Min(newY, CanvasEdited.Height - RectCropSelection.Height));
             
@@ -591,8 +1140,6 @@ public partial class MainWindow : Window
             CanvasEdited.ReleaseMouseCapture();
             _isCropMode = false;
             _isMovingCrop = false;
-            
-            // Update input fields when done
             UpdateCropInputFields();
         }
     }
@@ -601,7 +1148,6 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null || RectCropSelection.Visibility != Visibility.Visible) return;
         
-        // Calculate displayed image size
         double imageAspectRatio = (double)_currentImage.PixelWidth / _currentImage.PixelHeight;
         double canvasAspectRatio = CanvasEdited.Width / CanvasEdited.Height;
         
@@ -620,21 +1166,12 @@ public partial class MainWindow : Window
         double scaleX = _currentImage.PixelWidth / displayedWidth;
         double scaleY = _currentImage.PixelHeight / displayedHeight;
         
-        // Get crop rectangle from canvas
-        double canvasX = Canvas.GetLeft(RectCropSelection);
-        double canvasY = Canvas.GetTop(RectCropSelection);
         double canvasWidth = RectCropSelection.Width;
         double canvasHeight = RectCropSelection.Height;
         
-        // Adjust for image centering
-        double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
-        double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
-        
-        // Convert to image coordinates
         int width = (int)(canvasWidth * scaleX);
         int height = (int)(canvasHeight * scaleY);
         
-        // Update input fields
         if (TxtCropWidth != null && TxtCropHeight != null)
         {
             TxtCropWidth.Text = width.ToString();
@@ -676,7 +1213,7 @@ public partial class MainWindow : Window
         if (RectCropSelection.Visibility != Visibility.Visible || 
             RectCropSelection.Width <= 0 || RectCropSelection.Height <= 0)
         {
-            MessageBox.Show("Please select an area to crop by dragging on the edited image.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Please select an area to crop by right-clicking and dragging on the image.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         
@@ -689,20 +1226,17 @@ public partial class MainWindow : Window
         
         SaveToUndoStack();
         
-        // Calculate scale factors - image is displayed with Stretch="Uniform" so we need to calculate the actual displayed size
         double imageAspectRatio = (double)_currentImage.PixelWidth / _currentImage.PixelHeight;
         double canvasAspectRatio = CanvasEdited.Width / CanvasEdited.Height;
         
         double displayedWidth, displayedHeight;
         if (imageAspectRatio > canvasAspectRatio)
         {
-            // Image is wider - fit to width
             displayedWidth = CanvasEdited.Width;
             displayedHeight = CanvasEdited.Width / imageAspectRatio;
         }
         else
         {
-            // Image is taller - fit to height
             displayedHeight = CanvasEdited.Height;
             displayedWidth = CanvasEdited.Height * imageAspectRatio;
         }
@@ -710,23 +1244,19 @@ public partial class MainWindow : Window
         double scaleX = _currentImage.PixelWidth / displayedWidth;
         double scaleY = _currentImage.PixelHeight / displayedHeight;
         
-        // Get crop rectangle from canvas
         double canvasX = Canvas.GetLeft(RectCropSelection);
         double canvasY = Canvas.GetTop(RectCropSelection);
         double canvasWidth = RectCropSelection.Width;
         double canvasHeight = RectCropSelection.Height;
         
-        // Adjust for image centering in canvas
         double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
         double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
         
-        // Convert to image coordinates
         int x = (int)((canvasX - offsetX) * scaleX);
         int y = (int)((canvasY - offsetY) * scaleY);
         int width = (int)(canvasWidth * scaleX);
         int height = (int)(canvasHeight * scaleY);
         
-        // Ensure crop is within image bounds
         x = Math.Max(0, Math.Min(x, _currentImage.PixelWidth - 1));
         y = Math.Max(0, Math.Min(y, _currentImage.PixelHeight - 1));
         width = Math.Min(width, _currentImage.PixelWidth - x);
@@ -738,10 +1268,7 @@ public partial class MainWindow : Window
             return;
         }
         
-        // Create cropped image
         CroppedBitmap cropped = new(_currentImage, new Int32Rect(x, y, width, height));
-        
-        // Convert to BitmapImage
         BitmapImage result = ConvertBitmapSourceToBitmapImage(cropped);
         result.Freeze();
         
@@ -757,19 +1284,9 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null) return;
         
-        if (!int.TryParse(TxtCropWidth.Text, out int width) || width <= 0)
-        {
-            MessageBox.Show("Please enter a valid positive width.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
+        if (!int.TryParse(TxtCropWidth.Text, out int width) || width <= 0) return;
+        if (!int.TryParse(TxtCropHeight.Text, out int height) || height <= 0) return;
         
-        if (!int.TryParse(TxtCropHeight.Text, out int height) || height <= 0)
-        {
-            MessageBox.Show("Please enter a valid positive height.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-        
-        // Calculate displayed image size
         double imageAspectRatio = (double)_currentImage.PixelWidth / _currentImage.PixelHeight;
         double canvasAspectRatio = CanvasEdited.Width / CanvasEdited.Height;
         
@@ -788,15 +1305,12 @@ public partial class MainWindow : Window
         double scaleX = displayedWidth / _currentImage.PixelWidth;
         double scaleY = displayedHeight / _currentImage.PixelHeight;
         
-        // Set crop rectangle size in canvas coordinates
         double cropWidth = width * scaleX;
         double cropHeight = height * scaleY;
         
-        // Calculate offset for image centering
         double offsetX = (CanvasEdited.Width - displayedWidth) / 2;
         double offsetY = (CanvasEdited.Height - displayedHeight) / 2;
         
-        // Keep current position or create in top-left corner if no crop exists
         double cropX, cropY;
         if (RectCropSelection.Visibility == Visibility.Visible)
         {
@@ -805,12 +1319,10 @@ public partial class MainWindow : Window
         }
         else
         {
-            // Create crop in top-left corner of displayed image
             cropX = offsetX;
             cropY = offsetY;
         }
         
-        // Ensure crop stays within bounds
         cropX = Math.Max(offsetX, Math.Min(cropX, offsetX + displayedWidth - cropWidth));
         cropY = Math.Max(offsetY, Math.Min(cropY, offsetY + displayedHeight - cropHeight));
         
@@ -851,7 +1363,6 @@ public partial class MainWindow : Window
         double newX = currentX + deltaX;
         double newY = currentY + deltaY;
         
-        // Ensure crop stays within canvas bounds
         newX = Math.Max(0, Math.Min(newX, CanvasEdited.Width - RectCropSelection.Width));
         newY = Math.Max(0, Math.Min(newY, CanvasEdited.Height - RectCropSelection.Height));
         
@@ -859,31 +1370,15 @@ public partial class MainWindow : Window
         Canvas.SetTop(RectCropSelection, newY);
     }
     
-    private void BtnCropMoveUp_Click(object sender, RoutedEventArgs e)
-    {
-        MoveCropSelection(0, -10);
-    }
-    
-    private void BtnCropMoveDown_Click(object sender, RoutedEventArgs e)
-    {
-        MoveCropSelection(0, 10);
-    }
-    
-    private void BtnCropMoveLeft_Click(object sender, RoutedEventArgs e)
-    {
-        MoveCropSelection(-10, 0);
-    }
-    
-    private void BtnCropMoveRight_Click(object sender, RoutedEventArgs e)
-    {
-        MoveCropSelection(10, 0);
-    }
+    private void BtnCropMoveUp_Click(object sender, RoutedEventArgs e) => MoveCropSelection(0, -10);
+    private void BtnCropMoveDown_Click(object sender, RoutedEventArgs e) => MoveCropSelection(0, 10);
+    private void BtnCropMoveLeft_Click(object sender, RoutedEventArgs e) => MoveCropSelection(-10, 0);
+    private void BtnCropMoveRight_Click(object sender, RoutedEventArgs e) => MoveCropSelection(10, 0);
     
     private void BtnCropCenter_Click(object sender, RoutedEventArgs e)
     {
         if (RectCropSelection.Visibility != Visibility.Visible || _currentImage == null) return;
         
-        // Center the crop selection on the canvas
         double centerX = (CanvasEdited.Width - RectCropSelection.Width) / 2;
         double centerY = (CanvasEdited.Height - RectCropSelection.Height) / 2;
         
@@ -900,7 +1395,7 @@ public partial class MainWindow : Window
         
         SaveFileDialog dialog = new()
         {
-            Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg|BMP Image|*.bmp|GIF Image|*.gif|TIFF Image|*.tiff;*.tif|WebP Image|*.webp|All Files|*.*",
+            Filter = "PNG Image|*.png|JPEG Image|*.jpg;*.jpeg|BMP Image|*.bmp|GIF Image|*.gif|TIFF Image|*.tiff;*.tif|All Files|*.*",
             Title = "Save Image As"
         };
         
@@ -922,7 +1417,6 @@ public partial class MainWindow : Window
                 ".bmp" => new BmpBitmapEncoder(),
                 ".gif" => new GifBitmapEncoder(),
                 ".tiff" or ".tif" => new TiffBitmapEncoder(),
-                ".webp" => new PngBitmapEncoder(), // WebP not directly supported, use PNG as fallback
                 _ => new PngBitmapEncoder()
             };
             
@@ -951,7 +1445,6 @@ public partial class MainWindow : Window
         _undoStack.Push(CloneBitmapImage(_currentImage));
         if (_undoStack.Count > MAX_UNDO_HISTORY)
         {
-            // Remove oldest
             Stack<BitmapImage> temp = new(_undoStack);
             _undoStack.Clear();
             for (int i = 0; i < MAX_UNDO_HISTORY; i++)
@@ -1004,13 +1497,14 @@ public partial class MainWindow : Window
     // ============================================
     private void BtnHelp_Click(object sender, RoutedEventArgs e)
     {
-        string helpText = @"PictureWorks - Help
+        string helpText = @"PictureWorks v2.0.0 - Help
 
 HOW TO USE:
 
 1. OPEN IMAGE:
-   - Drag and drop an image onto the window, or
-   - Click the 'Open' button and select an image
+   - Drag and drop an image onto the window
+   - Click 'Open' button
+   - Ctrl+V to paste from clipboard
 
 2. RESIZE:
    - Select 'Percent' or 'Pixel' mode
@@ -1018,45 +1512,49 @@ HOW TO USE:
    - Toggle 'Maintain Aspect' on/off
    - Click 'Apply Resize'
 
-3. CROP:
-   - Right-click and drag on the image to select a crop area
-   - Left-click and drag to move the existing crop selection
-   - Use arrow keys to fine-tune position:
-     * Arrow Keys: Move 1 pixel
-     * Shift + Arrow Keys: Move 10 pixels
-   - Enter width/height in input fields and press Enter to set crop size
-   - Click 'Apply Crop' to apply the crop
+3. ROTATE & FLIP:
+   - ↺/↻ buttons rotate 90° left/right
+   - ↔/↕ buttons flip horizontal/vertical
 
-4. ROTATE:
-   - Click ↺ (left) or ↻ (right) rotation icons to rotate 90° at a time
+4. CROP:
+   - Select aspect ratio preset (Free, 16:9, 4:3, 1:1, etc.)
+   - Right-click and drag to select crop area
+   - Left-click and drag to move selection
+   - Arrow keys for fine-tuning (Shift for 10px)
+   - Click 'Apply Crop' to apply
 
-5. ZOOM:
-   - Use mouse wheel to zoom in/out
-   - Image stays anchored to top-left corner
+5. BRIGHTNESS/CONTRAST:
+   - Adjust sliders (-100 to +100)
+   - Click 'Apply' to apply changes
+   - Click 'Reset' to reset sliders
 
-6. SAVE:
-   - Click 'Save As' button
-   - Choose format and location
-   - Click Save
+6. FILTERS:
+   - 'Grayscale' - Convert to black & white
+   - 'Sepia' - Apply vintage sepia tone
+
+7. REMOVE BACKGROUND:
+   - Click 'Pick Color' then click on image
+   - Adjust tolerance slider (0-100)
+   - Click 'Remove' to make color transparent
+
+8. SAVE:
+   - Click 'Save As' to save
+   - Supports PNG, JPG, BMP, GIF, TIFF
+   - Ctrl+C to copy to clipboard
 
 KEYBOARD SHORTCUTS:
+- Ctrl+V: Paste image from clipboard
+- Ctrl+C: Copy image to clipboard
 - Arrow Keys: Move crop selection (1px)
-- Shift + Arrow Keys: Move crop selection (10px)
-- Enter (in crop input fields): Apply crop size from input fields
-
-UNDO/REDO:
-- Use Undo/Redo buttons to revert or reapply operations
-- Supports up to 20 operations";
+- Shift + Arrow Keys: Move crop (10px)
+- Mouse Wheel: Zoom in/out";
 
         MessageBox.Show(helpText, "PictureWorks - Help", MessageBoxButton.OK, MessageBoxImage.Information);
     }
     
     private void BtnAbout_Click(object sender, RoutedEventArgs e)
     {
-        AboutWindow aboutWindow = new()
-        {
-            Owner = this
-        };
+        AboutWindow aboutWindow = new() { Owner = this };
         aboutWindow.ShowDialog();
     }
     
@@ -1101,7 +1599,6 @@ UNDO/REDO:
         }
         catch (Exception ex)
         {
-            // Silently fail - theme will use defaults
             System.Diagnostics.Debug.WriteLine($"Theme update error: {ex.Message}");
         }
     }
@@ -1114,9 +1611,6 @@ UNDO/REDO:
         TxtStatus.Text = message;
     }
     
-    /// <summary>
-    /// Clone a BitmapImage by encoding and decoding it
-    /// </summary>
     private BitmapImage CloneBitmapImage(BitmapImage source)
     {
         if (source == null) return null!;

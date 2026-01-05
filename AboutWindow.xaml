@@ -51,7 +51,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <TextBlock Grid.Row="0" Text="PictureWorks v1.2.3" 
+        <TextBlock Grid.Row="0" Text="PictureWorks v2.0.4" 
                    FontSize="20" FontWeight="Bold" 
                    HorizontalAlignment="Center" 
                    Margin="0,0,0,15"

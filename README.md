@@ -1,33 +1,49 @@
 # PictureWorks
 
-A Windows desktop application for image editing - resize, crop, rotate, and convert images to various formats.
+A lightweight Windows desktop application for image editing - resize, crop, rotate, flip, adjust colors, apply filters, remove backgrounds, and convert images to various formats.
 
 ## Features
 
-- **Open Images**: Drag & drop or use File → Open menu
-- **Resize**: Resize by percentage or pixel size, with optional aspect ratio preservation
-- **Crop**: 
-  - Right-click and drag to select crop area
-  - Left-click and drag to move existing crop selection
-  - Use arrow keys to fine-tune crop position (Shift+Arrow for 10px steps)
-  - Enter crop dimensions manually and press Enter
-  - Crop selection anchored to top-left corner
-- **Rotate**: Rotate in 90° steps (left/right) using rotation icons (↺ ↻)
-- **Zoom**: Mouse wheel zoom in/out (0.1x steps, range 0.1x - 5.0x)
-- **Save As**: Save images in multiple formats (PNG, JPG, BMP, GIF, TIFF, WEBP)
-- **Undo/Redo**: Full undo/redo support for all operations (up to 20 steps)
-- **Dark Mode**: Toggle between light and dark themes
-- **Modern UI**: Clean, modern interface with custom color scheme (not Windows gray)
-- **Image Anchoring**: Image always anchored to top-left corner for consistent positioning
+### Core Features
+- **Open Images**: Drag & drop, File → Open, or Ctrl+V from clipboard
+- **Save Images**: Save to PNG, JPG, BMP, GIF, TIFF formats
+- **Clipboard Support**: Ctrl+V to paste, Ctrl+C to copy
+
+### Transform
+- **Resize**: By percentage or pixel size, with optional aspect ratio lock
+- **Crop**: With aspect ratio presets (Free, 16:9, 4:3, 1:1, 3:2, 2:3, 9:16)
+- **Rotate**: 90° left/right rotation
+- **Flip**: Horizontal and vertical flip
+- **Zoom**: Mouse wheel zoom (0.1x - 5.0x)
+
+### Adjustments
+- **Brightness**: -100 to +100 adjustment (live preview)
+- **Contrast**: -100 to +100 adjustment (live preview)
+- **Mouse Wheel Control**: Scroll on sliders to adjust values
+
+### Filters
+- **Grayscale**: Convert to black & white (toggle on/off)
+- **Sepia**: Apply vintage sepia tone (toggle on/off)
+
+### Background Removal
+- **Pick Color**: Click to select color from image
+- **Color Preview**: Visual indicator showing selected color
+- **Tolerance**: Adjustable 0-100 for color matching
+- **Remove**: Make selected color transparent (BGRA32 format)
+
+### Other
+- **Undo/Redo**: Up to 20 steps
+- **Dark/Light Mode**: Toggle between themes (Dark by default)
+- **Splash Screen**: 3.5 second startup screen with logo
+- **Modern UI**: Clean interface with two toolbar rows
 
 ## Supported Formats
 
-- PNG
+- PNG (with transparency)
 - JPG/JPEG
 - BMP
 - GIF
 - TIFF
-- WEBP
 
 ## Requirements
 
@@ -36,127 +52,63 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Installation
 
-1. Download `PictureWorks_v1.2.3.exe` (or latest version) from the `Ready Builds` folder
+1. Download `PictureWorks_v2.0.4.exe` from the `Ready Builds` folder
 2. Run the executable - no installation required (self-contained build)
-
-## Usage
-
-1. **Open an image**: Drag and drop an image onto the window, or click "Open" button
-2. **Resize**: 
-   - Select "Percent" or "Pixel" mode
-   - Enter the desired size
-   - Toggle "Maintain Aspect" on/off
-   - Click "Apply Resize"
-3. **Crop**: 
-   - **Right-click and drag** on the image to select a crop area
-   - **Left-click and drag** to move the existing crop selection
-   - Use **arrow keys** to fine-tune position (1px per press, Shift+Arrow for 10px)
-   - Enter width/height in input fields and press **Enter** to set crop size
-   - Click "Apply Crop" to apply the crop
-4. **Rotate**: 
-   - Click ↺ (left) or ↻ (right) rotation icons to rotate 90° at a time
-5. **Zoom**: 
-   - Use **mouse wheel** to zoom in/out
-   - Image stays anchored to top-left corner
-6. **Save**: 
-   - Click "Save As" button
-   - Choose format and location
-   - Click Save
 
 ## Keyboard Shortcuts
 
-- **Arrow Keys**: Move crop selection (1px)
-- **Shift + Arrow Keys**: Move crop selection (10px)
-- **Enter** (in crop input fields): Apply crop size from input fields
+| Shortcut | Action |
+|----------|--------|
+| Ctrl+V | Paste image from clipboard |
+| Ctrl+C | Copy image to clipboard |
+| Arrow Keys | Move crop selection (1px) |
+| Shift + Arrow Keys | Move crop selection (10px) |
+| Mouse Wheel | Zoom in/out |
+| Mouse Wheel on Slider | Adjust slider value |
 
 ## Version History
 
-### v1.2.3 (Current)
-- Splash screen now displays for 3.5 seconds (reduced from 5)
-- Splash screen centered over main window position
-- Dark Mode enabled by default on startup
+### v2.0.4 (Current) - Stable Release
+- **FIXED**: Background removal now works correctly (converts to BGRA32 format)
+- **NEW**: Color preview box shows selected color for removal
+- **NEW**: Tolerance value display updates live
+- **IMPROVED**: Better pixel coordinate calculation for color picking
 
-### v1.2.2
-- Added splash screen with logo
+### v2.0.0 - v2.0.3 - Major Update
+- **NEW**: Flip horizontal/vertical
+- **NEW**: Brightness/Contrast adjustments with live preview
+- **NEW**: Mouse wheel control for sliders
+- **NEW**: Grayscale and Sepia filters (toggle on/off)
+- **NEW**: Background removal with color picker and tolerance
+- **NEW**: Clipboard support (Ctrl+C/V)
+- **NEW**: Aspect ratio presets for crop (16:9, 4:3, 1:1, etc.)
+- **NEW**: Two-row toolbar layout
+- **NEW**: Splash screen (3.5 seconds)
+- **NEW**: Application icon
+- Dark Mode enabled by default
+- Reorganized UI for better workflow
 
-### v1.2.1
-- Added application icon (16, 32, 48, 256px sizes)
+### v1.1.9 - Legacy Stable
+- Last version before v2.0 feature additions
+- Crop functionality with keyboard controls
+- Rotation icons
+- Mouse wheel zoom
+- Undo/Redo system
+- Dark Mode toggle
 
-### v1.2.0
-- Optimized build configuration with single-file self-contained deployment
-- Removed unnecessary language satellite assemblies
-- Cleaned up project structure
-
-### v1.1.9
-- Added crop center button
-- Added crop movement buttons (up, down, left, right)
-- Improved crop UI with directional arrows
-
-### v1.1.8
-- Fixed crop selection visibility
-- Improved crop input field handling
-
-### v1.1.7
-- Enhanced crop movement with button controls
-- UI improvements for crop tools
-
-### v1.1.6
-- Added PayPal donation support in About window
-- UI refinements
-
-### v1.1.5
-- About window improvements
-- Added creator information
-
-### v1.1.4
-- Added About window with application information
-- Added Help button with usage instructions
-
-### v1.1.3
-- Fixed crop boundary calculations
-- Improved zoom behavior
-
-### v1.1.2
-- Fixed image anchoring to top-left corner for zoom, resize, and crop operations
-- Image no longer shifts position during operations
-
-### v1.1.1
-- Fixed mouse wheel zoom - now zooms instead of scrolling
-
-### v1.1.0
-- Fixed button sizes and symbols (crop buttons now same size as rotate buttons)
-- Added rotation icons (↺ ↻) instead of arrows
-- Implemented mouse wheel zoom functionality
-
-### v1.0.9
-- Removed "Set Size" button
-- Crop size updates on Enter key press
-- Crop created in top-left corner if missing
-- Fixed arrow symbols for crop buttons
-
-### v1.0.8
-- Single image view with proper scaling
-- Improved resize quality using RenderTargetBitmap
-- Enhanced crop functionality with keyboard controls
-- Real-time crop input field updates
-
-### v1.0.7
-- Fixed version numbering (corrected from 1.1.0)
-- Image scaling improvements
-- Crop UI enhancements
-
-### v1.0.6
-- Fixed null reference exceptions
-- Improved error handling
-- Self-contained build support
-
-### v1.0.5 and earlier
-- Initial releases with basic functionality
+### v1.0.x - v1.1.x
+- Initial releases with basic resize, crop, rotate functionality
+- Progressive feature additions and bug fixes
 
 ## Current Version
 
-**v1.2.3** - Latest stable release
+**v2.0.4** - Latest stable release (~70 MB, self-contained)
 
 ## License
 
 MIT License - Free use and modification
+
+## Author
+
+Created by Stig Ove K. Ruud  
+Email: soruud@gmail.com
