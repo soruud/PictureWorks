@@ -1,0 +1,44 @@
+<Window x:Class="PictureWorks.SplashScreen"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PictureWorks"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Width="768" Height="512">
+    
+    <Border CornerRadius="10" Background="#1E1E1E">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Logo Image -->
+            <Image Grid.Row="0" 
+                   Source="PW_LOGO.png" 
+                   Stretch="Uniform"
+                   Margin="20"
+                   RenderOptions.BitmapScalingMode="HighQuality"/>
+            
+            <!-- Loading indicator and version -->
+            <StackPanel Grid.Row="1" 
+                        HorizontalAlignment="Center" 
+                        Margin="0,0,0,20">
+                <TextBlock Text="Loading..."
+                           Foreground="#888888"
+                           FontSize="14"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,10"/>
+                <TextBlock Text="v1.2.2"
+                           Foreground="#666666"
+                           FontSize="12"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>
+

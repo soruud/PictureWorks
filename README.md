@@ -36,7 +36,7 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Installation
 
-1. Download `PictureWorks_v1.2.1.exe` (or latest version) from the `Ready Builds` folder
+1. Download `PictureWorks_v1.2.2.exe` (or latest version) from the `Ready Builds` folder
 2. Run the executable - no installation required (self-contained build)
 
 ## Usage
@@ -71,7 +71,10 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Version History
 
-### v1.2.1 (Current)
+### v1.2.2 (Current)
+- Added splash screen with logo (displays for 5 seconds on startup)
+
+### v1.2.1
 - Added application icon (16, 32, 48, 256px sizes)
 
 ### v1.2.0
@@ -147,7 +150,7 @@ A Windows desktop application for image editing - resize, crop, rotate, and conv
 
 ## Current Version
 
-**v1.2.1** - Latest stable release
+**v1.2.2** - Latest stable release
 
 ## License
 
